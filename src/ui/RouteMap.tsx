@@ -1,9 +1,12 @@
+import { useEffect, useRef, useState } from "react";
 import { nextProposedPlace } from "../domain/proposal";
 import type { Find, Tour } from "../domain/types";
+import { useReducedMotion } from "./useReducedMotion";
 
 // FR-007: schematic SVG route with found / next / remaining distinguishable
-// by colour + glyph + accessible name. Static in US1; US2 (T042) animates the
-// progress path via --route-progress and data-animating.
+// by colour + glyph + accessible name. FR-011 (US2): on a new find the
+// progress path draws forward (data-animating) and the new marker pops
+// (data-pop); both are suppressed under prefers-reduced-motion.
 
 export type MarkerStatus = "found" | "next" | "remaining";
 
@@ -18,7 +21,33 @@ const STATUS_LABEL: Record<MarkerStatus, string> = {
   remaining: "not yet found",
 };
 
+/** Covers the route transition (700 ms) plus the marker pop that follows. */
+const ANIMATION_MS = 1000;
+
 export function RouteMap({ tour, finds }: RouteMapProps) {
+  const reducedMotion = useReducedMotion();
+  const [animating, setAnimating] = useState(false);
+  const [poppedId, setPoppedId] = useState<string | null>(null);
+  const knownFindCount = useRef(finds.length);
+  const knownFindIds = useRef(new Set(finds.map((find) => find.placeId)));
+
+  useEffect(() => {
+    const previousCount = knownFindCount.current;
+    const previousIds = knownFindIds.current;
+    knownFindCount.current = finds.length;
+    knownFindIds.current = new Set(finds.map((find) => find.placeId));
+
+    if (reducedMotion || finds.length <= previousCount) return;
+    const fresh = finds.find((find) => !previousIds.has(find.placeId));
+    setAnimating(true);
+    setPoppedId(fresh?.placeId ?? null);
+    const timer = setTimeout(() => {
+      setAnimating(false);
+      setPoppedId(null);
+    }, ANIMATION_MS);
+    return () => clearTimeout(timer);
+  }, [finds, reducedMotion]);
+
   const foundIds = new Set(finds.map((find) => find.placeId));
   const next = nextProposedPlace(tour, finds);
   const places = [...tour.places].sort((a, b) => a.order - b.order);
@@ -47,6 +76,7 @@ export function RouteMap({ tour, finds }: RouteMapProps) {
           className="route-progress"
           d={tour.route.path}
           pathLength={1}
+          data-animating={animating ? "" : undefined}
           style={{
             strokeDasharray: 1,
             strokeDashoffset: 1 - fraction,
@@ -66,9 +96,12 @@ export function RouteMap({ tour, finds }: RouteMapProps) {
               transform={`translate(${place.routePosition.x} ${place.routePosition.y})`}
               role="img"
               aria-label={`Stop ${place.order}: ${place.name} — ${STATUS_LABEL[status]}`}
+              data-pop={poppedId === place.id ? "" : undefined}
             >
-              <circle r="16" />
-              <text>{status === "found" ? "✓" : place.order}</text>
+              <g className="pop">
+                <circle r="16" />
+                <text>{status === "found" ? "✓" : place.order}</text>
+              </g>
             </g>
           );
         })}

@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { useTour } from "../TourProvider";
 import { findFor, isComplete } from "../domain/tourState";
 import { navigate, type Route } from "../router";
 import { useObjectUrl } from "./useObjectUrl";
+import { useReducedMotion } from "./useReducedMotion";
 
 // FR-004: name, hero visual, first-person story, optional downtown
 // translation. Undo ("This wasn't it"), retake photo, and — once the tour is
@@ -59,17 +61,42 @@ function FoundPlace({
   snap: (opts?: { retakeFor?: string }) => Promise<void>;
   undo: (placeId: string) => void;
 }) {
-  const { state } = useTour();
+  const { state, ackReveal } = useTour();
+  const reducedMotion = useReducedMotion();
   const { tour } = state;
   const place = tour.places.find((candidate) => candidate.id === placeId)!;
   const hero = place.media[0]!;
   const yourPhotoUrl = useObjectUrl(findPhoto);
   const complete = isComplete(state);
 
+  // The surprise moment (US2, T043): when this place was *just* found, the
+  // visitor's own photo crossfades into the author's visual. Tap to skip.
+  // Never replayed (ackReveal) and never played under reduced motion.
+  const [revealing, setRevealing] = useState(
+    () => state.lastFoundId === placeId && !!findPhoto && !reducedMotion,
+  );
+  const finishReveal = () => {
+    setRevealing(false);
+    ackReveal();
+  };
+
   return (
     <article className="screen detail">
       <h1>{place.name}</h1>
-      <img className="detail__hero" src={hero.src} alt={hero.alt} />
+      <div className="detail__hero-wrap">
+        <img className="detail__hero" src={hero.src} alt={hero.alt} />
+        {revealing && yourPhotoUrl && (
+          <button
+            type="button"
+            className="reveal-overlay"
+            aria-label="Skip the photo reveal"
+            onClick={finishReveal}
+            onAnimationEnd={finishReveal}
+          >
+            <img src={yourPhotoUrl} alt="" />
+          </button>
+        )}
+      </div>
       {hero.credit && <p className="detail__credit">{hero.credit}</p>}
 
       <p className="detail__story">{place.story}</p>

@@ -1,4 +1,4 @@
-import { Component, type ReactNode } from "react";
+import { Component, Suspense, lazy, type ReactNode } from "react";
 import { TourProvider, useTour } from "./TourProvider";
 import { tour } from "./content/tour";
 import { useHashRoute, type Route } from "./router";
@@ -7,6 +7,12 @@ import { DebugPanel } from "./ui/DebugPanel";
 import { PlaceDetail } from "./ui/PlaceDetail";
 import { TourScreen } from "./ui/TourScreen";
 import { Welcome } from "./ui/Welcome";
+
+// The recap is only needed at the end of the drive — keep it out of the
+// initial bundle (SC-001). The chunk is still precached for offline use.
+const Recap = lazy(() =>
+  import("./ui/Recap").then((module) => ({ default: module.Recap })),
+);
 
 // Route switch behind a hydration gate: nothing renders as "locked" or
 // "0 found" until IndexedDB state has loaded (FR-008; US3 deep links).
@@ -29,15 +35,16 @@ function Screens({ route }: { route: Route }) {
     case "place":
       return <PlaceDetail route={route} />;
     case "recap":
-      // Placeholder until User Story 2 lands the real recap (T044).
       return (
-        <div className="screen">
-          <h1>Your ride</h1>
-          <p>The recap is coming with the next story.</p>
-          <a className="btn" href="#/tour">
-            Back to the route
-          </a>
-        </div>
+        <Suspense
+          fallback={
+            <div className="app-status" aria-busy="true">
+              <p>Loading your ride…</p>
+            </div>
+          }
+        >
+          <Recap />
+        </Suspense>
       );
   }
 }

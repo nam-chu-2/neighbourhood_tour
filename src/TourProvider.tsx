@@ -52,6 +52,8 @@ interface TourContextValue {
   /** Mark the proposed (or a given) place found with no photo (FR-005). */
   markWithoutPhoto: (placeId?: string) => string | null;
   undo: (placeId: string) => void;
+  /** The just-found reveal finished (or was skipped) — don't replay it. */
+  ackReveal: () => void;
   debugLog: DebugEvent[];
 }
 
@@ -194,6 +196,8 @@ export function TourProvider({ tour, children }: { tour: Tour; children: ReactNo
     [send],
   );
 
+  const ackReveal = useCallback(() => dispatch({ type: "revealShown" }), []);
+
   const value = useMemo<TourContextValue>(
     () => ({
       state,
@@ -206,6 +210,7 @@ export function TourProvider({ tour, children }: { tour: Tour; children: ReactNo
       dismiss,
       markWithoutPhoto,
       undo,
+      ackReveal,
       debugLog,
     }),
     [
@@ -218,6 +223,7 @@ export function TourProvider({ tour, children }: { tour: Tour; children: ReactNo
       dismiss,
       markWithoutPhoto,
       undo,
+      ackReveal,
       debugLog,
     ],
   );

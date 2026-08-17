@@ -35,7 +35,9 @@ export type TourAction =
   | { type: "dismiss" }
   | { type: "cameraUnavailable"; error: CameraErrorKind }
   | { type: "markWithoutPhoto"; placeId?: string; at?: string }
-  | { type: "undoFind"; placeId: string };
+  | { type: "undoFind"; placeId: string }
+  /** The just-found reveal has been shown; don't replay it on revisits. */
+  | { type: "revealShown" };
 
 export function initialState(tour: Tour): TourState {
   return {
@@ -174,6 +176,9 @@ export function reducer(state: TourState, action: TourAction): TourState {
       if (!targetId) return abandon(state);
       return withFind(state, targetId, null, "no-photo", action.at ?? now());
     }
+
+    case "revealShown":
+      return state.lastFoundId === null ? state : { ...state, lastFoundId: null };
 
     case "undoFind": {
       const finds = state.finds.filter((find) => find.placeId !== action.placeId);

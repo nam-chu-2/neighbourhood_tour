@@ -56,6 +56,12 @@ export function TourScreen() {
         </ol>
       </div>
 
+      {found > 0 && !complete && (
+        <p>
+          <a href="#/recap">See your ride so far →</a>
+        </p>
+      )}
+
       {complete && (
         <section className="closing-note" aria-label="The end of the drive">
           <h2>That&rsquo;s the drive</h2>

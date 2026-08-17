@@ -113,18 +113,18 @@ order with names; "Save" produces one JPEG via share/download (quickstart US2 1�
 
 ### Tests for User Story 2 (write first, confirm failing)
 
-- [ ] T037 [P] [US2] Unit tests `tests/unit/composeRecap.test.ts`: `composeRecap(finds, tour)` returns a JPEG Blob with expected dimensions for 1, 3, N finds (canvas mocked), orders by place order, renders a "no photo" tile for null photos
-- [ ] T038 [P] [US2] Component test `tests/unit/RouteMap.test.tsx`: progress path updates on new find; `data-animating` set then cleared within 1000 ms; with `matchMedia('(prefers-reduced-motion: reduce)')` mocked true, no `data-animating`
-- [ ] T039 [P] [US2] E2E `tests/e2e/us2-delight-recap.spec.ts`: on confirm, marker gains "found" and detail sheet is visible ≤1 s; `page.emulateMedia({reducedMotion: 'reduce'})` → identical content, no transitions; after all found → closing note → recap shows N items in route order with names; "Save your ride" calls mocked `navigator.share` with one image file, else a download link exists; partial recap (3 of N) reachable from tour screen
+- [X] T037 [P] [US2] Unit tests `tests/unit/composeRecap.test.ts`: `composeRecap(finds, tour)` returns a JPEG Blob with expected dimensions for 1, 3, N finds (canvas mocked), orders by place order, renders a "no photo" tile for null photos
+- [X] T038 [P] [US2] Component test `tests/unit/RouteMap.test.tsx`: progress path updates on new find; `data-animating` set then cleared within 1000 ms; with `matchMedia('(prefers-reduced-motion: reduce)')` mocked true, no `data-animating`
+- [X] T039 [P] [US2] E2E `tests/e2e/us2-delight-recap.spec.ts`: on confirm, marker gains "found" and detail sheet is visible ≤1 s; `page.emulateMedia({reducedMotion: 'reduce'})` → identical content, no transitions; after all found → closing note → recap shows N items in route order with names; "Save your ride" calls mocked `navigator.share` with one image file, else a download link exists; partial recap (3 of N) reachable from tour screen
 
 ### Implementation for User Story 2
 
-- [ ] T040 [P] [US2] Add `src/styles/motion.css`: route `stroke-dashoffset` transition (700 ms), marker pop keyframes (300 ms), sheet slide-up (350 ms), photo→hero crossfade (600 ms); all neutralized by the reduced-motion block from T012
-- [ ] T041 [P] [US2] Implement `src/ui/useReducedMotion.ts` (matchMedia hook) and `src/recap/composeRecap.ts` (canvas grid, 2 cols mobile, place names, tour title, closing note strip → JPEG Blob) (makes T037 pass)
-- [ ] T042 [US2] Enhance `src/ui/RouteMap.tsx`: animate progress path to the newly found marker (`data-animating`), marker pop, respects `useReducedMotion` (makes T038 pass)
-- [ ] T043 [US2] Enhance `src/ui/SnapSheet.tsx` + `src/ui/PlaceDetail.tsx`: reveal sequence on confirm (map animates → detail slides → the visitor's photo crossfades into the author's visual — the "surprise" moment, tap to skip)
-- [ ] T044 [US2] Implement `src/ui/Recap.tsx`: grid in route order with names (no-photo badge where applicable), closing note, "Save your ride" (Web Share with files when `navigator.canShare`, else `<a download>`), partial-recap notice; link from TourScreen when ≥1 find; auto-navigate on completion after closing note
-- [ ] T045 [US2] Run and fix until T037–T039 pass; re-run US1 e2e for regressions
+- [X] T040 [P] [US2] Add `src/styles/motion.css`: route `stroke-dashoffset` transition (700 ms), marker pop keyframes (300 ms), sheet slide-up (350 ms), photo→hero crossfade (600 ms); all neutralized by the reduced-motion block from T012
+- [X] T041 [P] [US2] Implement `src/ui/useReducedMotion.ts` (matchMedia hook) and `src/recap/composeRecap.ts` (canvas grid, 2 cols mobile, place names, tour title, closing note strip → JPEG Blob) (makes T037 pass)
+- [X] T042 [US2] Enhance `src/ui/RouteMap.tsx`: animate progress path to the newly found marker (`data-animating`), marker pop, respects `useReducedMotion` (makes T038 pass)
+- [X] T043 [US2] Enhance `src/ui/SnapSheet.tsx` + `src/ui/PlaceDetail.tsx`: reveal sequence on confirm (map animates → detail slides → the visitor's photo crossfades into the author's visual — the "surprise" moment, tap to skip)
+- [X] T044 [US2] Implement `src/ui/Recap.tsx`: grid in route order with names (no-photo badge where applicable), closing note, "Save your ride" (Web Share with files when `navigator.canShare`, else `<a download>`), partial-recap notice; link from TourScreen when ≥1 find; auto-navigate on completion after closing note
+- [X] T045 [US2] Run and fix until T037–T039 pass; re-run US1 e2e for regressions
 
 **Checkpoint**: US1 + US2 pass independently.
 
