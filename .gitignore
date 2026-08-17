@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+dev-dist/
+
+# Test output
+playwright-report/
+test-results/
+coverage/
+
+# Generated artefacts
+qr.png
+
+# Local config and secrets — never tracked (Constitution V)
+.env
+.env.*
+!.env.example
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.swp
+.vscode/
+.idea/

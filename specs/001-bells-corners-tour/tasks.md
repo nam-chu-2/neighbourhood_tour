@@ -23,16 +23,23 @@ There is **no server, no API, no secrets**.
 
 **Purpose**: Bootstrapped, lint-clean, testable static project skeleton.
 
-- [ ] T001 Initialize project: `npm create vite@latest . -- --template react-ts`, set `"type": "module"`, add deps `react react-dom idb-keyval` and dev deps `vite-plugin-pwa vitest @testing-library/react @testing-library/jest-dom @testing-library/user-event jsdom fake-indexeddb @playwright/test @axe-core/playwright ajv sharp typescript eslint prettier tsx qrcode` in `package.json`; scripts: `dev`, `build`, `preview`, `test`, `test:e2e`, `typecheck`, `lint`, `fixtures`, `qr`
-- [ ] T002 Create directory skeleton per plan.md: `src/{content/media,domain,storage,camera,recap,ui/a11y,styles}`, `tests/{unit,e2e,fixtures/places}`, `scripts/`, `.github/workflows/` (add `.gitkeep` files)
-- [ ] T003 [P] Configure `vite.config.ts` (React plugin, `server.host: true` for LAN phones, `base` from `VITE_BASE` env defaulting to `/`, `build.target: "es2022"`, `vite-plugin-pwa` with `registerType: "autoUpdate"`, precache `**/*.{js,css,html,svg,png,jpg,webp,woff2}`, manifest name/short_name/theme_color/icons) and `tsconfig.json` (strict)
-- [ ] T004 [P] Configure `vitest.config.ts` (jsdom env, `setupFiles: tests/setup.ts` importing `@testing-library/jest-dom` and `fake-indexeddb/auto`, include `tests/unit/**`)
-- [ ] T005 [P] Configure `playwright.config.ts` (projects: `iPhone 13`, `Pixel 5`, `Desktop Chrome`; `webServer` runs `npm run build && npm run preview -- --port 4173` so the service worker exists; baseURL `http://localhost:4173`; retries 0)
-- [ ] T006 [P] Configure `eslint.config.js` (typescript-eslint, react-hooks, jsx-a11y) and `.prettierrc`; add `.editorconfig`
-- [ ] T007 [P] Add `.gitignore` (node_modules, dist, dev-dist, playwright-report, test-results, qr.png) and `.github/workflows/pages.yml` (on push to main: `npm ci`, `npm test`, `npm run build` with `VITE_BASE=/<repo>/`, upload `dist/`, deploy to GitHub Pages)
-- [ ] T008 [P] Write `README.md` (what it is, zero-cost/static note, quickstart commands from `specs/001-bells-corners-tour/quickstart.md`, content-authoring pointer to `src/content/README.md`, deploy)
+- [X] T001 Initialize project: `npm create vite@latest . -- --template react-ts`, set `"type": "module"`, add deps `react react-dom idb-keyval` and dev deps `vite-plugin-pwa vitest @testing-library/react @testing-library/jest-dom @testing-library/user-event jsdom fake-indexeddb @playwright/test @axe-core/playwright ajv sharp typescript eslint prettier tsx qrcode` in `package.json`; scripts: `dev`, `build`, `preview`, `test`, `test:e2e`, `typecheck`, `lint`, `fixtures`, `qr`
+- [X] T002 Create directory skeleton per plan.md: `src/{content/media,domain,storage,camera,recap,ui/a11y,styles}`, `tests/{unit,e2e,fixtures/places}`, `scripts/`, `.github/workflows/` (add `.gitkeep` files)
+- [X] T003 [P] Configure `vite.config.ts` (React plugin, `server.host: true` for LAN phones, `base` from `VITE_BASE` env defaulting to `/`, `build.target: "es2022"`, `vite-plugin-pwa` with `registerType: "autoUpdate"`, precache `**/*.{js,css,html,svg,png,jpg,webp,woff2}`, manifest name/short_name/theme_color/icons) and `tsconfig.json` (strict)
+- [X] T004 [P] Configure `vitest.config.ts` (jsdom env, `setupFiles: tests/setup.ts` importing `@testing-library/jest-dom` and `fake-indexeddb/auto`, include `tests/unit/**`)
+- [X] T005 [P] Configure `playwright.config.ts` (projects: `iPhone 13`, `Pixel 5`, `Desktop Chrome`; `webServer` runs `npm run build && npm run preview -- --port 4173` so the service worker exists; baseURL `http://localhost:4173`; retries 0)
+- [X] T006 [P] Configure `eslint.config.js` (typescript-eslint, react-hooks, jsx-a11y) and `.prettierrc`; add `.editorconfig`
+- [X] T007 [P] Add `.gitignore` (node_modules, dist, dev-dist, playwright-report, test-results, qr.png) and `.github/workflows/pages.yml` (on push to main: `npm ci`, `npm test`, `npm run build` with `VITE_BASE=/<repo>/`, upload `dist/`, deploy to GitHub Pages)
+- [X] T008 [P] Write `README.md` (what it is, zero-cost/static note, quickstart commands from `specs/001-bells-corners-tour/quickstart.md`, content-authoring pointer to `src/content/README.md`, deploy)
 
 **Checkpoint**: `npm install && npm run typecheck && npm test && npm run test:e2e` all run (0 tests) and `npm run dev` serves a blank page on phone and desktop.
+
+> **Checkpoint status (2026-08-17, partial)**: `npm install` and `npm run typecheck` verified
+> passing. NOT yet verified: `npm test` (needs `tests/setup.ts` from T009+), `npm run build`
+> and `npm run test:e2e` (need `index.html` + `src/main.tsx` from T015), `npm run dev` on a
+> real phone. Expect these to fail until Phase 2 lands — that is the normal ordering, not a
+> regression. Deviation from T001: scaffolded `package.json` directly instead of
+> `npm create vite` (interactive, and the directory was non-empty).
 
 ---
 
