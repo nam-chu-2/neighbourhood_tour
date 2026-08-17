@@ -156,9 +156,9 @@ order with names; "Save" produces one JPEG via share/download (quickstart US2 1�
 ## Phase 6: Polish & Cross-Cutting Concerns
 
 - [ ] T051 [P] Author-content pass: replace placeholders in `src/content/tour.ts` with real Bells Corners places in drive order, stories, downtown translations, optional `cue`s, optimized media in `src/content/media/` (WebP/JPEG ≤1600 px + alt + credit); keep `tests/unit/tourContent.test.ts` green (requires author input)
-- [ ] T052 [P] Performance: verify initial JS ≤150 kB gzip via `vite build` report; lazy-load `Recap`; hero images `loading="lazy"` + responsive `srcset`; add `tests/e2e/perf.spec.ts` asserting welcome usable <3 s under Playwright's throttled 4G; confirm precache size is reasonable (<15 MB) and lists all media
-- [ ] T053 [P] Add `scripts/qr.ts` (`qrcode` → `qr.png` for the Pages URL) and `npm run qr`; document in `README.md`
-- [ ] T054 [P] Hardening: `index.html` meta `referrer` no-referrer, `Permissions-Policy` via `<meta http-equiv>` where supported, no external requests at runtime (assert in `tests/e2e/us1-fallbacks-offline.spec.ts` that no request leaves the origin after load)
+- [X] T052 [P] Performance: verify initial JS ≤150 kB gzip via `vite build` report; lazy-load `Recap`; hero images `loading="lazy"` + responsive `srcset`; add `tests/e2e/perf.spec.ts` asserting welcome usable <3 s under Playwright's throttled 4G; confirm precache size is reasonable (<15 MB) and lists all media
+- [X] T053 [P] Add `scripts/qr.ts` (`qrcode` → `qr.png` for the Pages URL) and `npm run qr`; document in `README.md`
+- [X] T054 [P] Hardening: `index.html` meta `referrer` no-referrer, `Permissions-Policy` via `<meta http-equiv>` where supported, no external requests at runtime (assert in `tests/e2e/us1-fallbacks-offline.spec.ts` that no request leaves the origin after load)
 - [ ] T055 Run full `specs/001-bells-corners-tour/quickstart.md` validation on a real phone over LAN and once against the built/preview app offline; record results in `specs/001-bells-corners-tour/checklists/validation-run.md`
 - [ ] T056 Deploy: push to `main` → GitHub Pages workflow; open on a phone once on Wi‑Fi (warm cache); do the rehearsal drive counting correct proposals (SC-002a ≥ 9/10); adjust `order`/`cue` in `src/content/tour.ts` if needed; generate `qr.png`
 

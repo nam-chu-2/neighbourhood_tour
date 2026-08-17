@@ -85,6 +85,30 @@ test.describe("offline after first load", () => {
   });
 });
 
+// FR-003b / FR-015 (T054): the site must never call out — no external or
+// paid service, no analytics, nothing. Any request leaving the origin during
+// a full pass through the app is a failure.
+test("no request leaves the origin at runtime", async ({ page, baseURL }) => {
+  const external: string[] = [];
+  page.on("request", (request) => {
+    const url = request.url();
+    const internal =
+      url.startsWith(baseURL!) || url.startsWith("data:") || url.startsWith("blob:");
+    if (!internal) external.push(url);
+  });
+
+  await page.goto("/");
+  await page.getByRole("link", { name: /start the ride/i }).click();
+  await snap(page, placeFixture(p1.id));
+  await confirmProposal(page);
+  await expect(page.getByRole("heading", { name: p1.name })).toBeVisible();
+  await page.getByRole("link", { name: /back to the route/i }).click();
+  await page.getByRole("link", { name: /your ride so far/i }).click();
+  await expect(page.getByRole("heading", { name: /your ride/i })).toBeVisible();
+
+  expect(external).toEqual([]);
+});
+
 // FR-010: the same site adapts to a desktop width with no loss of content.
 test.describe("desktop layout", () => {
   test.skip(({ isMobile }) => !!isMobile, "desktop-only check");

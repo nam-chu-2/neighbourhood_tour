@@ -109,10 +109,10 @@ function RecapTile({ find, place }: { find: Find; place: Place }) {
     <li className="recap__tile">
       <figure>
         {photoUrl ? (
-          <img src={photoUrl} alt={`Your shot of ${place.name}`} />
+          <img src={photoUrl} alt={`Your shot of ${place.name}`} loading="lazy" />
         ) : (
           <span className="recap__no-photo">
-            <img src={hero.src} alt={hero.alt} />
+            <img src={hero.src} alt={hero.alt} loading="lazy" />
             <span className="badge">No photo</span>
           </span>
         )}

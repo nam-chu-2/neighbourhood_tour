@@ -99,7 +99,13 @@ function ReadablePlace({ place, find }: { place: Place; find: Find | undefined }
     <article className="screen detail">
       <h1>{place.name}</h1>
       <div className="detail__hero-wrap">
-        <img className="detail__hero" src={hero.src} alt={hero.alt} />
+        <img
+          className="detail__hero"
+          src={hero.src}
+          alt={hero.alt}
+          loading="lazy"
+          decoding="async"
+        />
         {revealing && yourPhotoUrl && (
           <button
             type="button"

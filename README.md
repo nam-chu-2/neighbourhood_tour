@@ -30,7 +30,7 @@ npm test               # Vitest: unit + component, no network
 npm run test:e2e       # Playwright: mobile flows, offline, reduced motion, axe
 npm run typecheck && npm run lint
 npm run fixtures       # regenerate test photo fixtures
-npm run qr             # qr.png for the deployed URL
+npm run qr -- https://<user>.github.io/neighbourhood_tour/   # qr.png for the deployed URL
 ```
 
 Full validation walkthrough: [`specs/001-bells-corners-tour/quickstart.md`](specs/001-bells-corners-tour/quickstart.md).

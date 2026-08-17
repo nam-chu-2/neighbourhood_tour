@@ -8,6 +8,12 @@
     />
     <meta name="theme-color" content="#1b3a2f" />
     <meta name="referrer" content="no-referrer" />
+    <!-- Belt-and-braces: the app never uses these; honoured where the host
+         doesn't send a Permissions-Policy header (FR-015, T054). -->
+    <meta
+      http-equiv="Permissions-Policy"
+      content="geolocation=(), microphone=(), payment=(), usb=()"
+    />
     <meta
       name="description"
       content="A short ride-along tour of Bells Corners — snap each place to unlock its story."
