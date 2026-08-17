@@ -140,14 +140,14 @@ order with names; "Save" produces one JPEG via share/download (quickstart US2 1�
 
 ### Tests for User Story 3 (write first, confirm failing)
 
-- [ ] T046 [P] [US3] Unit tests `tests/unit/readability.test.ts`: `canRead(place, state, route)` true if found, or completedAt set, or `route.after`; false otherwise
-- [ ] T047 [P] [US3] E2E `tests/e2e/us3-revisit-deeplink.spec.ts`: after completion, new page in same context shows finds + recap; fresh context `#/place/<id>` → locked (name, marker context, Snap CTA); `#/place/<id>?after=1` → full description; "Share this place" produces the `?after=1` link (mocked share/clipboard)
+- [X] T046 [P] [US3] Unit tests `tests/unit/readability.test.ts`: `canRead(place, state, route)` true if found, or completedAt set, or `route.after`; false otherwise
+- [X] T047 [P] [US3] E2E `tests/e2e/us3-revisit-deeplink.spec.ts`: after completion, new page in same context shows finds + recap; fresh context `#/place/<id>` → locked (name, marker context, Snap CTA); `#/place/<id>?after=1` → full description; "Share this place" produces the `?after=1` link (mocked share/clipboard)
 
 ### Implementation for User Story 3
 
-- [ ] T048 [P] [US3] Implement `src/domain/readability.ts` (`canRead`) (makes T046 pass)
-- [ ] T049 [US3] Enhance `src/ui/PlaceDetail.tsx`: locked vs readable variants per `canRead`; "Share this place" (Web Share URL or clipboard) building `#/place/<id>?after=1` once the tour is complete
-- [ ] T050 [US3] Confirm `TourProvider` hydration gate prevents flashing locked content on reload/deep link; run and fix until T046–T047 pass
+- [X] T048 [P] [US3] Implement `src/domain/readability.ts` (`canRead`) (makes T046 pass)
+- [X] T049 [US3] Enhance `src/ui/PlaceDetail.tsx`: locked vs readable variants per `canRead`; "Share this place" (Web Share URL or clipboard) building `#/place/<id>?after=1` once the tour is complete
+- [X] T050 [US3] Confirm `TourProvider` hydration gate prevents flashing locked content on reload/deep link; run and fix until T046–T047 pass
 
 **Checkpoint**: All three stories pass independently.
 
