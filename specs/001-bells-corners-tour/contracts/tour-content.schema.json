@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://neighbourhood-tour.local/contracts/tour-content.schema.json",
+  "title": "Tour content (authored, static)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "title",
+    "intro",
+    "places",
+    "route",
+    "closingNote"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "const": "bells-corners"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "intro": {
+      "type": "string",
+      "minLength": 1
+    },
+    "closingNote": {
+      "type": "string",
+      "minLength": 1
+    },
+    "route": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "viewBox",
+        "path"
+      ],
+      "properties": {
+        "viewBox": {
+          "type": "string",
+          "pattern": "^\\d+ \\d+ \\d+ \\d+$"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "description": "SVG path d attribute for the drive"
+        }
+      }
+    },
+    "places": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 10,
+      "items": {
+        "$ref": "#/$defs/Place"
+      }
+    }
+  },
+  "$defs": {
+    "PlaceId": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "Media": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "src",
+        "alt",
+        "credit",
+        "kind"
+      ],
+      "properties": {
+        "src": {
+          "type": "string",
+          "minLength": 1
+        },
+        "alt": {
+          "type": "string",
+          "minLength": 3
+        },
+        "credit": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "photo",
+            "illustration",
+            "map"
+          ]
+        }
+      }
+    },
+    "Place": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "order",
+        "name",
+        "routePosition",
+        "media",
+        "story"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/PlaceId"
+        },
+        "order": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "routePosition": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "x",
+            "y"
+          ],
+          "properties": {
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            }
+          }
+        },
+        "media": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/Media"
+          }
+        },
+        "story": {
+          "type": "string",
+          "minLength": 1
+        },
+        "downtownTranslation": {
+          "type": "string"
+        },
+        "cue": {
+          "type": "string",
+          "maxLength": 80,
+          "description": "Optional one-line 'what to look for' shown with the proposal"
+        }
+      }
+    }
+  }
+}
