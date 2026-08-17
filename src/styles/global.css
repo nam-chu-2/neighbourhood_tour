@@ -1,0 +1,95 @@
+@import "./tokens.css";
+
+/* Minimal reset */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--text-m);
+  line-height: 1.55;
+  color: var(--color-ink);
+  background: var(--color-bg);
+  min-height: 100dvh;
+  /* Never scroll sideways on a phone (FR-010 / SC-004). */
+  overflow-x: hidden;
+}
+
+img,
+svg,
+video {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+p {
+  max-width: 65ch;
+}
+
+a {
+  color: var(--color-primary);
+}
+
+/* Focus must be findable in bright daylight (Constitution IV). */
+:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-s);
+}
+
+/* Headings receive focus programmatically on route changes (a11y/focus.ts);
+   they don't need the ring, the announcement is what matters. */
+h1:focus-visible,
+h2:focus-visible {
+  outline: none;
+}
+
+/* Screen-reader-only utility (LiveRegion, labels). */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* FR-011 / SC-006: honouring prefers-reduced-motion collapses every
+   animation and transition in the app — motion.css relies on this block. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

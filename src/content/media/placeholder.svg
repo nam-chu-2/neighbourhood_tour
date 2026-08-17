@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" role="img" aria-label="Placeholder illustration: a schematic road under a sky">
+  <rect width="800" height="600" fill="#e8efe9"/>
+  <rect y="0" width="800" height="360" fill="#dbe7f0"/>
+  <circle cx="640" cy="110" r="56" fill="#f2c94c"/>
+  <path d="M0 600 L310 360 H490 L800 600 Z" fill="#5c6b62"/>
+  <path d="M400 360 L400 600" stroke="#f5f2e8" stroke-width="14" stroke-dasharray="42 34"/>
+  <path d="M0 380 Q200 330 400 360 T800 380" fill="none" stroke="#8aa392" stroke-width="10"/>
+  <text x="400" y="520" text-anchor="middle" font-family="system-ui, sans-serif" font-size="40" fill="#f5f2e8">Author photo coming soon</text>
+</svg>
