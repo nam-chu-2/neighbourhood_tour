@@ -18,25 +18,24 @@ export default defineConfig({
       registerType: "autoUpdate",
       injectRegister: null, // registered explicitly in src/main.tsx
       workbox: {
-        // FR-012: the whole drive must work offline after first load, so the
-        // app shell, the authored content bundle and every place visual are
-        // precached rather than left to the HTTP cache.
+        // FR-019: the whole tour must work offline after first load, so the
+        // app shell, the authored content bundle, every station visual and the
+        // noise texture are precached rather than left to the HTTP cache.
         globPatterns: ["**/*.{js,css,html,svg,png,jpg,jpeg,webp,woff2}"],
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         navigateFallback: "index.html",
         cleanupOutdatedCaches: true,
       },
       manifest: {
-        name: "Bells Corners Drive-Through Tour",
-        short_name: "Bells Corners",
+        name: "Bells Corners Radio",
+        short_name: "BC Radio",
         description:
-          "A short ride-along tour of Bells Corners — snap each place to unlock its story.",
+          "Tune the dial through Bells Corners — every station is a place I grew up with.",
         start_url: base,
         scope: base,
         display: "standalone",
-        orientation: "portrait",
-        background_color: "#fdfbf5",
-        theme_color: "#1b3a2f",
+        background_color: "#101828",
+        theme_color: "#101828",
         icons: [
           { src: "icon-192.png", sizes: "192x192", type: "image/png" },
           { src: "icon-512.png", sizes: "512x512", type: "image/png" },

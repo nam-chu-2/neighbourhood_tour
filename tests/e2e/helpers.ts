@@ -1,110 +1,126 @@
 import { expect, type Page } from "@playwright/test";
-import path from "node:path";
 
-// Shared Playwright helpers (T017). The snap flow drives a hidden
-// <input type="file"> — no real camera exists in CI.
+// Shared Playwright helpers. The dial is a scroll container, so the tests
+// drive it the way a thumb does — by scrolling it — rather than by calling
+// application code (contract §10).
 
-export const FIXTURES_DIR = path.resolve(import.meta.dirname, "../fixtures");
+export const SETTLE_MS = 260;
 
-export function placeFixture(placeId: string): string {
-  return path.join(FIXTURES_DIR, "places", `${placeId}-1.jpg`);
+/** Wipe the visitor's saved progress so a test starts fresh. */
+export async function resetStorage(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    try {
+      window.localStorage.clear();
+    } catch {
+      // Nothing stored is nothing to clear.
+    }
+  });
 }
 
-/** Tap the Snap button and feed `fixturePath` into the hidden camera input. */
-export async function snap(page: Page, fixturePath: string): Promise<void> {
-  const chooserPromise = page.waitForEvent("filechooser");
-  await page.getByRole("button", { name: /snap/i }).click();
-  const chooser = await chooserPromise;
-  await chooser.setFiles(fixturePath);
-  // The proposal sheet is the next stable state.
-  await expect(page.getByRole("dialog")).toBeVisible();
+/** Seed received stations so a test can start mid-tour. Reload afterwards. */
+export async function seedReceptions(page: Page, stationIds: string[]): Promise<void> {
+  await page.evaluate((ids) => {
+    const at = new Date().toISOString();
+    window.localStorage.setItem(
+      "bells-corners-radio:v1",
+      JSON.stringify({
+        version: 1,
+        soundOn: false,
+        receptions: ids.map((stationId) => ({ stationId, at })),
+        startedAt: at,
+      }),
+    );
+  }, stationIds);
 }
 
-/** Confirm the proposal ("Yes, that's it"). */
-export async function confirmProposal(page: Page): Promise<void> {
-  await page.getByRole("button", { name: /yes, that.s it/i }).click();
+/**
+ * Open a route with a real page load. Changing only the hash is a
+ * same-document navigation, so the running app would answer with the state it
+ * loaded with — and, for #/signoff, redirect away before seeded progress is
+ * ever read. A unique query string forces an actual load.
+ */
+export async function openRoute(page: Page, hash: string): Promise<void> {
+  await page.goto(`/?fresh=${Date.now()}${hash}`);
 }
 
-/** From the proposal, open the pick list and choose the place named `name`. */
-export async function pickPlace(page: Page, name: string): Promise<void> {
-  await page.getByRole("button", { name: /pick a different place/i }).click();
-  await page.getByRole("button", { name }).click();
+/** How far along the band (0–1) the needle currently sits. */
+export async function tuneValue(page: Page): Promise<number> {
+  return page.evaluate(() =>
+    Number.parseFloat(
+      getComputedStyle(document.documentElement).getPropertyValue("--tune") || "0",
+    ),
+  );
 }
 
-/** FR-010 / SC-004: the page must never scroll horizontally. */
+/** Scroll the band to a fraction of its travel and let it settle. */
+export async function tuneToFraction(page: Page, fraction: number): Promise<void> {
+  await page.evaluate((f) => {
+    const band = document.querySelector<HTMLElement>('[data-testid="band"]');
+    if (!band) throw new Error("no band");
+    band.scrollTo({ left: (band.scrollWidth - band.clientWidth) * f, behavior: "auto" });
+  }, fraction);
+  await page.waitForTimeout(SETTLE_MS);
+}
+
+/** Centre the needle on a station the way a settling flick would. */
+export async function tuneToStation(page: Page, stationId: string): Promise<void> {
+  await page.evaluate((id) => {
+    const band = document.querySelector<HTMLElement>('[data-testid="band"]');
+    const mark = document.querySelector<HTMLElement>(`[data-station-id="${id}"]`);
+    if (!band || !mark) throw new Error(`no band or station ${id}`);
+    const target = mark.offsetLeft + mark.offsetWidth / 2 - band.clientWidth / 2;
+    band.scrollTo({ left: target, behavior: "auto" });
+  }, stationId);
+  await page.waitForTimeout(SETTLE_MS);
+}
+
+/** Park the needle between two stations, where the static lives. */
+export async function tuneBetween(page: Page, firstId: string, secondId: string): Promise<void> {
+  await page.evaluate(
+    ({ firstId, secondId }) => {
+      const band = document.querySelector<HTMLElement>('[data-testid="band"]');
+      const a = document.querySelector<HTMLElement>(`[data-station-id="${firstId}"]`);
+      const b = document.querySelector<HTMLElement>(`[data-station-id="${secondId}"]`);
+      if (!band || !a || !b) throw new Error("no band or stations");
+      const centre = (mark: HTMLElement) => mark.offsetLeft + mark.offsetWidth / 2;
+      band.scrollTo({
+        left: (centre(a) + centre(b)) / 2 - band.clientWidth / 2,
+        behavior: "auto",
+      });
+    },
+    { firstId, secondId },
+  );
+  await page.waitForTimeout(SETTLE_MS);
+}
+
+/**
+ * Fly the needle across the band without ever letting it settle — the flick
+ * that must leave every station it passes unreceived.
+ */
+export async function flickAcross(page: Page, steps = 12): Promise<void> {
+  await page.evaluate(async (count) => {
+    const band = document.querySelector<HTMLElement>('[data-testid="band"]');
+    if (!band) throw new Error("no band");
+    const travel = band.scrollWidth - band.clientWidth;
+    for (let i = 1; i <= count; i += 1) {
+      band.scrollTo({ left: (travel * i) / count, behavior: "auto" });
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+    }
+  }, steps);
+}
+
+export async function receivedIds(page: Page): Promise<string[]> {
+  return page.evaluate(() =>
+    [...document.querySelectorAll<HTMLElement>('[data-testid="station-mark"]')]
+      .filter((mark) => mark.dataset.received === "true")
+      .map((mark) => mark.dataset.stationId ?? ""),
+  );
+}
+
+/** FR-016: the page itself must never scroll horizontally. */
 export async function expectNoHorizontalScroll(page: Page): Promise<void> {
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
   );
   expect(overflow, "horizontal overflow in px").toBeLessThanOrEqual(0);
-}
-
-/** Wipe IndexedDB (finds, progress) so a test starts from a fresh visitor. */
-export async function resetStorage(page: Page): Promise<void> {
-  await page.evaluate(async () => {
-    const dbs = await indexedDB.databases();
-    await Promise.all(
-      dbs
-        .filter((db) => db.name)
-        .map(
-          (db) =>
-            new Promise<void>((resolve) => {
-              const req = indexedDB.deleteDatabase(db.name!);
-              req.onsuccess = req.onerror = req.onblocked = () => resolve();
-            }),
-        ),
-    );
-  });
-}
-
-/**
- * Seed Finds directly into IndexedDB (idb-keyval's default db/store:
- * "keyval-store"/"keyval") so US2/US3 tests can start mid-tour without
- * replaying the snap flow. Reload the page afterwards to hydrate.
- */
-export async function seedFinds(page: Page, placeIds: string[]): Promise<void> {
-  await page.evaluate(async (ids) => {
-    const open = () =>
-      new Promise<IDBDatabase>((resolve, reject) => {
-        const req = indexedDB.open("keyval-store");
-        req.onupgradeneeded = () => req.result.createObjectStore("keyval");
-        req.onsuccess = () => resolve(req.result);
-        req.onerror = () => reject(req.error);
-      });
-    const db = await open();
-
-    // A tiny valid JPEG is enough — the app only displays it. Finds are
-    // persisted as ArrayBuffer + type (see src/storage/findStore.ts).
-    const canvas = document.createElement("canvas");
-    canvas.width = 8;
-    canvas.height = 6;
-    const ctx = canvas.getContext("2d")!;
-    ctx.fillStyle = "#1b6b3a";
-    ctx.fillRect(0, 0, 8, 6);
-    const photo: Blob = await new Promise((resolve) =>
-      canvas.toBlob((b) => resolve(b!), "image/jpeg", 0.8),
-    );
-    const photoBytes = await photo.arrayBuffer();
-
-    await new Promise<void>((resolve, reject) => {
-      const tx = db.transaction("keyval", "readwrite");
-      const store = tx.objectStore("keyval");
-      for (const placeId of ids) {
-        store.put(
-          {
-            placeId,
-            photoBytes,
-            photoType: "image/jpeg",
-            method: "proposal",
-            at: new Date().toISOString(),
-          },
-          `find:${placeId}`,
-        );
-      }
-      store.put({ startedAt: new Date().toISOString() }, "progress");
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-    });
-    db.close();
-  }, placeIds);
 }

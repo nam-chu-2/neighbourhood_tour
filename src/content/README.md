@@ -1,47 +1,60 @@
-# Authoring the tour content
+# Authoring the broadcast
 
-Everything the passengers see comes from **`tour.ts`** in this directory. It is the
-only file the author needs to edit, plus dropping images into **`media/`**. The shape
-is enforced by `tests/unit/tourContent.test.ts` against
-`specs/001-bells-corners-tour/contracts/tour-content.schema.json` — run `npm test`
-after editing.
+Everything a visitor reads or sees lives in this folder. You do not need to touch
+anything else to make the tour yours.
 
-## Tour fields
+## The files
 
-| Field | What to write |
-|---|---|
-| `title` | The tour's name, shown on the welcome screen. |
-| `intro` | 2–4 sentences framing Bells Corners for someone who only knows downtown Ottawa. |
-| `route.viewBox` / `route.path` | The schematic SVG route the map draws. Keep the viewBox; bend the path however you like. |
-| `closingNote` | Shown after the last place is found and on the recap. |
-| `places` | 6–10 stops, in **drive order** — see below. |
+| File | What it holds |
+| --- | --- |
+| `broadcast.ts` | The tour: its title, the opening instruction, the band, every station, and the sign-off. |
+| `palette.ts` | The five colours the dial travels through, from predawn to neon. |
+| `media/` | Your images. `noise.png` is generated — leave it alone. |
 
-## Place fields
+Run `npm test` after every edit. The tests are the authoring guardrail: they fail
+loudly and specifically when something in here would break the tour.
 
-| Field | What to write |
-|---|---|
-| `id` | Stable URL-safe slug (`my-old-school`). Used in share links and on-device storage — don't rename after the drive. |
-| `order` | **The order you will actually drive the route.** 1-based, no gaps, no repeats. The snap proposal ("Is this the …?") follows this order, so if the rehearsal drive disagrees, fix `order`, not your driving. |
-| `name` | Display name; appears in the proposal as "Is this the *name*?" |
-| `routePosition` | `{ x, y }` marker position in `route.viewBox` units — place it on the path. |
-| `media` | At least one item; the **first** is the hero visual on the place's page. Each needs `src` (import from `./media/`), a meaningful `alt`, a `credit`, and a `kind` (`photo` / `illustration` / `map`). |
-| `story` | Your first-person memory of the place — this is the heart of the site. |
-| `downtownTranslation` | Optional: "for you downtown folks, this is our …". Leave out where it doesn't fit. |
-| `cue` | Optional one-liner shown with the proposal so passengers know what to point the camera at ("blue sign on the right", max 80 chars). |
+## Stations
 
-## Media files
+Each station is one place in Bells Corners. Fill in:
 
-- Put optimized images in `media/` (WebP or JPEG, ≤1600 px long edge — phones on data
-  will thank you).
-- Reference them the way `tour.ts` already does:
-  `new URL("./media/my-photo.webp", import.meta.url).href` — Vite bundles and the
-  service worker precaches them for offline use in the car.
-- Every image needs `alt` text that works for a screen reader ("the white church at
-  the crossroads, photographed from the car"), not a filename.
+- **`name`** — what you would call it out loud.
+- **`frequency`** — where it sits on the dial, e.g. `99.5`. **The order of the
+  frequencies is the order of the drive**, so list them the way you would pass
+  the places. Two rules: they must increase down the list, and neighbours must
+  be at least `0.4` apart, so their lock zones cannot overlap.
+- **`memory`** — the first-person story. This is the heart of it; write it the
+  way you would say it in the car.
+- **`downtownTranslation`** — optional, and the thing that makes it land for
+  people who only know the core: "this was our Rideau Centre, all eight shops of
+  it."
+- **`callSign`** — optional flavour, e.g. `CPLZ`. Decorative only; never put
+  meaning here that is not also in the name or the memory.
+- **`visuals`** — at least one. Every visual needs an **`alt`** that describes
+  what is in it (someone who cannot see the image is relying on it) and a
+  **`credit`**.
 
-## Checklist before the drive
+Six to ten stations is the intended length — long enough to be a tour, short
+enough to hold attention.
 
-1. `npm test` — content contract green.
-2. `npm run build && npm run preview` — click through every place on your phone.
-3. Rehearsal drive (quickstart.md): count how often the proposal is right; target
-   ≥ 9/10. Fix `order`/`cue` if it guesses wrong.
+## The `id` field
+
+An id is a station's permanent address: it appears in shareable links and in the
+visitor's saved progress. Change one after you have sent the link around and you
+break both. Pick it once, in lower case with hyphens, and leave it.
+
+## Palette
+
+Five stops, each with a background, an ink colour for text, and an accent. The
+dial blends between them as the visitor tunes, so a stop is not a theme — it is a
+moment in the light.
+
+Any colour you choose has to stay readable, including everywhere *between* two
+stops. `npm test` checks that for you at every stop and at sampled points in
+between; if it fails, darken the background or brighten the ink.
+
+## Images
+
+Put them in `media/` and import them the way `broadcast.ts` already does. Keep
+them reasonably sized — the whole site is precached so it works offline, and
+every megabyte is a megabyte someone waits for on mobile data.

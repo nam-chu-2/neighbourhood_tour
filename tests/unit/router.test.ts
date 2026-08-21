@@ -1,74 +1,50 @@
 import { describe, expect, it } from "vitest";
-import { navigate, parseRoute, placeHref } from "../../src/router";
+import { parseRoute, stationHref } from "../../src/router";
 
 describe("parseRoute", () => {
-  it("parses #/ (and empty hash) as welcome", () => {
-    expect(parseRoute("#/")).toEqual({ name: "welcome", after: false, debug: false });
-    expect(parseRoute("")).toEqual({ name: "welcome", after: false, debug: false });
-    expect(parseRoute("#")).toEqual({ name: "welcome", after: false, debug: false });
+  it("treats an empty or root hash as the dial", () => {
+    expect(parseRoute("")).toMatchObject({ name: "dial" });
+    expect(parseRoute("#/")).toMatchObject({ name: "dial" });
+    expect(parseRoute("#")).toMatchObject({ name: "dial" });
   });
 
-  it("parses #/tour and #/recap", () => {
-    expect(parseRoute("#/tour").name).toBe("tour");
-    expect(parseRoute("#/recap").name).toBe("recap");
-  });
-
-  it("parses #/place/:id with the place id", () => {
-    expect(parseRoute("#/place/bells-corners-sign")).toEqual({
-      name: "place",
-      placeId: "bells-corners-sign",
-      after: false,
-      debug: false,
+  it("parses a station deep link", () => {
+    expect(parseRoute("#/station/the-plaza")).toMatchObject({
+      name: "station",
+      stationId: "the-plaza",
     });
   });
 
-  it("treats #/place with no id as welcome", () => {
-    expect(parseRoute("#/place").name).toBe("welcome");
+  it("decodes an encoded station id", () => {
+    expect(parseRoute("#/station/the%20plaza")).toMatchObject({ stationId: "the plaza" });
   });
 
-  it("treats unknown paths as welcome", () => {
-    expect(parseRoute("#/nope/what").name).toBe("welcome");
+  it("parses the guide and the sign-off", () => {
+    expect(parseRoute("#/guide")).toMatchObject({ name: "guide" });
+    expect(parseRoute("#/signoff")).toMatchObject({ name: "signoff" });
   });
 
-  it("reads after=1 and debug=1 from the hash query", () => {
-    const route = parseRoute("#/place/the-school?after=1&debug=1");
-    expect(route).toEqual({
-      name: "place",
-      placeId: "the-school",
-      after: true,
-      debug: true,
-    });
+  it("falls back to the dial for an unknown route", () => {
+    expect(parseRoute("#/nowhere")).toMatchObject({ name: "dial" });
   });
 
-  it("reads flags from the page query too (shared links strip nothing)", () => {
-    expect(parseRoute("#/place/the-school", "?after=1").after).toBe(true);
-    expect(parseRoute("#/tour", "?debug=1").debug).toBe(true);
+  it("treats a station route with no id as the dial", () => {
+    expect(parseRoute("#/station/")).toMatchObject({ name: "dial" });
   });
 
-  it("ignores non-'1' flag values", () => {
-    expect(parseRoute("#/tour?after=0").after).toBe(false);
-    expect(parseRoute("#/tour?after=yes").after).toBe(false);
+  it("reads the debug flag from either the hash query or the page query", () => {
+    expect(parseRoute("#/?debug=1").debug).toBe(true);
+    expect(parseRoute("#/", "?debug=1").debug).toBe(true);
+    expect(parseRoute("#/").debug).toBe(false);
   });
 });
 
-describe("placeHref", () => {
-  it("builds a place link, optionally with after=1", () => {
-    expect(placeHref("the-plaza")).toBe("#/place/the-plaza");
-    expect(placeHref("the-plaza", { after: true })).toBe("#/place/the-plaza?after=1");
+describe("stationHref", () => {
+  it("builds a shareable link for a station", () => {
+    expect(stationHref("the-plaza")).toBe("#/station/the-plaza");
   });
 
-  it("round-trips through parseRoute", () => {
-    const route = parseRoute(placeHref("greenbelt-woods", { after: true }));
-    expect(route.placeId).toBe("greenbelt-woods");
-    expect(route.after).toBe(true);
-  });
-});
-
-describe("navigate", () => {
-  it("sets the location hash with or without a leading #", () => {
-    navigate("#/tour");
-    expect(window.location.hash).toBe("#/tour");
-    navigate("/recap");
-    expect(window.location.hash).toBe("#/recap");
+  it("encodes ids that need it", () => {
+    expect(stationHref("the plaza")).toBe("#/station/the%20plaza");
   });
 });

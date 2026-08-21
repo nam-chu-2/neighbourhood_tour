@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://neighbourhood-tour.local/contracts/broadcast-content.schema.json",
+  "title": "Broadcast content (authored, static)",
+  "description": "The single authored artefact of the site: the Bells Corners radio broadcast and its stations. Validated by tests/unit/broadcastContent.test.ts. Cross-field rules that JSON Schema cannot express (strictly increasing frequencies, contiguous order, minimum station spacing) are asserted in that same test — see data-model.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "title", "intro", "band", "stations", "signOff"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "const": "bells-corners"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "intro": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The single instruction shown before the first lock-in (FR-001)."
+    },
+    "signOff": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The closing broadcast shown once every station is received (FR-012)."
+    },
+    "band": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["min", "max"],
+      "description": "The frequency range the dial spans. Every station frequency must fall inside it.",
+      "properties": {
+        "min": { "type": "number" },
+        "max": { "type": "number" }
+      }
+    },
+    "stations": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 10,
+      "items": { "$ref": "#/$defs/Station" }
+    }
+  },
+  "$defs": {
+    "Station": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "order", "frequency", "name", "visuals", "memory"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+          "description": "URL-safe slug. Appears in deep links (FR-018) and storage keys — stable once shared."
+        },
+        "order": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "1-based, unique, contiguous, matching the order along the road (FR-004)."
+        },
+        "frequency": {
+          "type": "number",
+          "description": "Position on the band and the on-screen ident, e.g. 101.7. Strictly increasing with order; adjacent stations at least 0.4 apart so lock zones cannot overlap."
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "callSign": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8,
+          "description": "Optional decorative ident, e.g. CBLL. Never the only carrier of meaning (FR-021)."
+        },
+        "dialLabel": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16,
+          "description": "Optional very short label printed on the band; falls back to the frequency."
+        },
+        "memory": {
+          "type": "string",
+          "minLength": 1,
+          "description": "First-person story (FR-007)."
+        },
+        "downtownTranslation": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Optional comparison to something familiar downtown (FR-007)."
+        },
+        "visuals": {
+          "type": "array",
+          "minItems": 1,
+          "description": "The first entry is the hero visual (FR-007).",
+          "items": { "$ref": "#/$defs/Visual" }
+        }
+      }
+    },
+    "Visual": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["src", "alt", "credit", "kind"],
+      "properties": {
+        "src": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Vite-resolved asset URL for a file under src/content/media/."
+        },
+        "alt": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Meaningful text alternative — required for every visual (FR-021)."
+        },
+        "credit": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string",
+          "enum": ["photo", "illustration"]
+        }
+      }
+    }
+  }
+}

@@ -1,82 +1,103 @@
-// Domain types per specs/001-bells-corners-tour/data-model.md.
+// Domain types per specs/002-radio-dial-tour/data-model.md.
+//
 // Two data domains: authored content (static, baked into the build) and
-// visitor state (per device, IndexedDB). Nothing is stored anywhere else.
+// visitor state (per device, localStorage). A third category — tuning state —
+// is transient, and is deliberately split: its continuous part lives in CSS
+// custom properties (--tune / --detune, never React state), its discrete part
+// is the reducer below.
 
 // ---------- Authored content ----------
 
-export type MediaKind = "photo" | "illustration" | "map";
+/** The frequency range the dial spans. */
+export interface Band {
+  min: number;
+  max: number;
+}
 
-export interface Media {
+export type VisualKind = "photo" | "illustration";
+
+export interface Visual {
   /** Asset URL (Vite-resolved) for a file under src/content/media/. */
   src: string;
-  /** Required, meaningful text alternative (FR-014). */
+  /** Required, meaningful text alternative (FR-021). */
   alt: string;
   credit: string;
-  kind: MediaKind;
+  kind: VisualKind;
 }
 
-export interface Place {
-  /** URL-safe slug, stable — used in deep links and storage keys. */
+export interface Station {
+  /** URL-safe slug, stable — used in deep links (FR-018) and storage keys. */
   id: string;
-  /** Route order, 1-based, unique — drives the proposal (FR-003a). */
+  /** 1-based, unique, contiguous, in the order the places occur along the road. */
   order: number;
+  /** Position on the band and the on-screen ident, e.g. 101.7. */
+  frequency: number;
   name: string;
-  /** Marker position in route viewBox units. */
-  routePosition: { x: number; y: number };
-  /** At least one; the first is the hero visual (FR-004). */
-  media: Media[];
+  /** Optional decorative ident; never the only carrier of meaning. */
+  callSign?: string;
+  /** Optional very short label printed on the band; falls back to the frequency. */
+  dialLabel?: string;
+  /** At least one; the first is the hero visual (FR-007). */
+  visuals: Visual[];
   /** First-person story. */
-  story: string;
+  memory: string;
   /** Optional comparison for a downtown-only audience. */
   downtownTranslation?: string;
-  /** Optional one-line "what to look for" shown with the proposal. */
-  cue?: string;
 }
 
-export interface Tour {
+export interface Broadcast {
   id: "bells-corners";
   title: string;
+  /** The single instruction shown before the first lock-in (FR-001). */
   intro: string;
-  places: Place[];
-  route: { viewBox: string; path: string };
-  closingNote: string;
+  band: Band;
+  stations: Station[];
+  /** The closing broadcast, shown once every station is received (FR-012). */
+  signOff: string;
+}
+
+/** One stop in the palette the band travels through (FR-011). */
+export interface PaletteStop {
+  /** Position along the band, 0–1. */
+  at: number;
+  name: string;
+  bg: string;
+  ink: string;
+  accent: string;
 }
 
 // ---------- Visitor state (per device) ----------
 
-export type FindMethod = "proposal" | "picked" | "no-photo";
-
-export interface Find {
-  placeId: string;
-  /** Downscaled JPEG (≤1024 px long edge); null for no-photo finds (FR-005). */
-  photo: Blob | null;
-  method: FindMethod;
-  /** ISO datetime of the find. */
+export interface Reception {
+  stationId: string;
+  /** ISO datetime of the lock-in. */
   at: string;
 }
 
-export interface Progress {
-  /** ISO datetime of the first snap or Start tap. */
+export interface VisitorState {
+  version: number;
+  receptions: Reception[];
+  /** The visitor's sound preference; sound is off until they ask for it (FR-014). */
+  soundOn: boolean;
   startedAt?: string;
-  /** ISO datetime set when every place is found. */
   completedAt?: string;
 }
 
-// ---------- Snap flow (in-memory only) ----------
+// ---------- Tuning (transient) ----------
 
-export type CameraErrorKind = "denied" | "unavailable" | "failed" | "cancelled";
+export type TuningState =
+  | { phase: "offStation" }
+  | { phase: "settling"; candidateId: string }
+  | { phase: "locked"; stationId: string };
 
-/**
- * The snap bottom-sheet state machine (data-model.md "State transitions").
- * `idle` — no sheet. `capturing` — the native camera/file input is open
- * (retakeFor set when re-taking a found place's photo from its detail page).
- * `proposing` — photo taken, proposing the next unfound place in route order.
- * `picking` — visitor chose "pick a different place". `cameraUnavailable` —
- * capture failed; offer a no-photo find so the tour continues (FR-005).
- */
-export type SnapPhase =
-  | { phase: "idle" }
-  | { phase: "capturing"; retakeFor?: string }
-  | { phase: "proposing"; placeId: string; photo: Blob }
-  | { phase: "picking"; photo: Blob | null }
-  | { phase: "cameraUnavailable"; placeId: string | null; error: CameraErrorKind };
+export type TuningEvent =
+  | {
+      type: "SCROLL";
+      nearestId: string | null;
+      /** Distance from the nearest station's centre, in band units (0–1). */
+      distance: number;
+      lockRadius: number;
+    }
+  | { type: "SETTLED" }
+  | { type: "FOCUS_STATION"; stationId: string }
+  | { type: "OPEN_STATION"; stationId: string };

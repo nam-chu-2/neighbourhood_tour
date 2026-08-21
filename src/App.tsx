@@ -1,100 +1,113 @@
-import { Component, Suspense, lazy, type ReactNode } from "react";
-import { TourProvider, useTour } from "./TourProvider";
-import { tour } from "./content/tour";
-import { useHashRoute, type Route } from "./router";
+import { useEffect, useState } from "react";
+import { RadioProvider, useRadio } from "./RadioProvider";
+import { navigate, useHashRoute } from "./router";
 import { LiveRegion } from "./ui/a11y/LiveRegion";
+import { Broadcast } from "./ui/Broadcast";
 import { DebugPanel } from "./ui/DebugPanel";
-import { PlaceDetail } from "./ui/PlaceDetail";
-import { TourScreen } from "./ui/TourScreen";
-import { Welcome } from "./ui/Welcome";
+import { Dial } from "./ui/Dial";
+import { SignOff } from "./ui/SignOff";
+import { SoundToggle } from "./ui/SoundToggle";
+import { StationGuide } from "./ui/StationGuide";
+import { Static } from "./ui/Static";
+import { Stepper } from "./ui/Stepper";
+import { useReducedMotion } from "./ui/useReducedMotion";
 
-// The recap is only needed at the end of the drive — keep it out of the
-// initial bundle (SC-001). The chunk is still precached for offline use.
-const Recap = lazy(() =>
-  import("./ui/Recap").then((module) => ({ default: module.Recap })),
-);
+export default function App() {
+  return (
+    <LiveRegion>
+      <RadioProvider>
+        <Radio />
+      </RadioProvider>
+    </LiveRegion>
+  );
+}
 
-// Route switch behind a hydration gate: nothing renders as "locked" or
-// "0 found" until IndexedDB state has loaded (FR-008; US3 deep links).
-function Screens({ route }: { route: Route }) {
-  const { ready } = useTour();
+function Radio() {
+  const route = useHashRoute();
+  const { broadcast, complete, openStation, tuning, log } = useRadio();
+  const reducedMotion = useReducedMotion();
+  const [notFound, setNotFound] = useState<string | null>(null);
 
-  if (!ready) {
+  // Deep links (FR-018): a station link opens that station directly, with the
+  // dial around it. An id that no longer exists says so plainly and leaves the
+  // visitor somewhere useful rather than on an error page (FR-023).
+  useEffect(() => {
+    if (route.name !== "station" || !route.stationId) return;
+
+    const exists = broadcast.stations.some((station) => station.id === route.stationId);
+    if (!exists) {
+      // Say what happened, then put them somewhere useful. The notice has to
+      // outlive the redirect it triggers, so it is cleared by tuning in — not
+      // by landing back on the dial (FR-023).
+      log(`unknown station in link: ${route.stationId}`);
+      setNotFound(route.stationId);
+      navigate("#/");
+      return;
+    }
+    setNotFound(null);
+    openStation(route.stationId);
+  }, [route, broadcast, openStation, log]);
+
+  // Any successful lock-in means the visitor has moved on from the bad link.
+  useEffect(() => {
+    if (tuning.phase === "locked") setNotFound(null);
+  }, [tuning]);
+
+  // The sign-off belongs to the end of the tour; reaching for it early simply
+  // returns to the dial (contract §1).
+  useEffect(() => {
+    if (route.name === "signoff" && !complete) navigate("#/");
+  }, [route, complete]);
+
+  if (route.name === "guide") {
     return (
-      <div className="app-status" aria-busy="true">
-        <p>Loading the drive…</p>
-      </div>
+      <>
+        <StationGuide />
+        {route.debug ? <DebugPanel /> : null}
+      </>
     );
   }
 
-  switch (route.name) {
-    case "welcome":
-      return <Welcome />;
-    case "tour":
-      return <TourScreen />;
-    case "place":
-      return <PlaceDetail route={route} />;
-    case "recap":
-      return (
-        <Suspense
-          fallback={
-            <div className="app-status" aria-busy="true">
-              <p>Loading your ride…</p>
-            </div>
-          }
-        >
-          <Recap />
-        </Suspense>
-      );
-  }
-}
-
-// A crash must never strand a passenger mid-drive with a blank page or a raw
-// stack trace (Constitution IV): explain and offer a reload — state is safe
-// in IndexedDB.
-class ErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
-  state = { failed: false };
-
-  static getDerivedStateFromError() {
-    return { failed: true };
+  if (route.name === "signoff" && complete) {
+    return (
+      <>
+        <SignOff />
+        {route.debug ? <DebugPanel /> : null}
+      </>
+    );
   }
 
-  render() {
-    if (this.state.failed) {
-      return (
-        <div className="app-status">
-          <h1>Something went wrong</h1>
-          <p>
-            The tour hit a snag, but your finds and photos are safe on this phone.
-            Reload to pick up where you left off.
-          </p>
-          <button
-            type="button"
-            className="btn btn--primary"
-            onClick={() => window.location.reload()}
-          >
-            Reload the tour
-          </button>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
-
-export default function App() {
-  const route = useHashRoute();
+  const lockedStation =
+    tuning.phase === "locked"
+      ? (broadcast.stations.find((station) => station.id === tuning.stationId) ?? null)
+      : null;
 
   return (
-    <ErrorBoundary>
-      <LiveRegion>
-        <TourProvider tour={tour}>
-          <main>
-            <Screens route={route} />
-          </main>
-          {route.debug && <DebugPanel />}
-        </TourProvider>
-      </LiveRegion>
-    </ErrorBoundary>
+    <div className="radio">
+      <header className="radio__top">
+        <h1 className="radio__title">{broadcast.title}</h1>
+        <div className="radio__controls">
+          <a className="radio__link" href="#/guide" data-testid="guide">
+            Station guide
+          </a>
+          <SoundToggle />
+        </div>
+      </header>
+
+      {notFound ? (
+        <p className="radio__notice" role="status">
+          That station is not on this dial any more. Tune from the start instead.
+        </p>
+      ) : null}
+
+      <main className="radio__screen">
+        <Static />
+        {lockedStation ? <Broadcast station={lockedStation} /> : null}
+      </main>
+
+      {reducedMotion ? <Stepper /> : null}
+      <Dial />
+      {route.debug ? <DebugPanel /> : null}
+    </div>
   );
 }

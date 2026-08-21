@@ -1,25 +1,88 @@
-/* Design tokens — sunlight-friendly, high-contrast (Constitution IV, FR-014).
-   Every text/background pairing used in the UI is ≥ 4.5:1:
-   ink #1c1b18 on bg #fdfbf5 ≈ 15.6:1 · muted #565248 on bg ≈ 7.2:1 ·
-   on-primary #fdfbf5 on primary #1b3a2f ≈ 10.8:1 · remaining #5c6b62 markers
-   carry text in on-primary. */
+/* Design tokens.
+
+   The palette is not fixed: it travels across the band from predawn to neon
+   (FR-011). Each stop is authored in src/content/palette.ts and written here
+   as a custom property; --tune interpolates between them in oklab, and
+   tests/unit/palette.test.ts holds every stop and every interpolated point at
+   4.5:1 or better. */
 :root {
-  /* Colour */
-  --color-bg: #fdfbf5;
-  --color-surface: #ffffff;
-  --color-surface-sunken: #f2eee3;
-  --color-ink: #1c1b18;
-  --color-ink-muted: #565248;
-  --color-primary: #1b3a2f;
-  --color-primary-press: #122b21;
-  --color-on-primary: #fdfbf5;
-  --color-accent: #9a3b00;
-  --color-found: #1b6b3a;
-  --color-next: #9a3b00;
-  --color-remaining: #5c6b62;
-  --color-danger: #9d1c1c;
-  --color-focus: #0b57d0;
-  --color-shadow: rgb(28 27 24 / 0.18);
+  /* Palette stops — keep in sync with src/content/palette.ts. */
+  --stop-0-bg: #0d1426;
+  --stop-0-ink: #e9eefb;
+  --stop-0-accent: #79b0ff;
+  --stop-1-bg: #0e2320;
+  --stop-1-ink: #e7f6f0;
+  --stop-1-accent: #6ed7a4;
+  --stop-2-bg: #2a1c0c;
+  --stop-2-ink: #fdf2e2;
+  --stop-2-accent: #f5b04a;
+  --stop-3-bg: #231027;
+  --stop-3-ink: #f7eafb;
+  --stop-3-accent: #dc93ff;
+  --stop-4-bg: #1b0a13;
+  --stop-4-ink: #ffeaf4;
+  --stop-4-accent: #ff6ba9;
+
+  /* Continuous tuning state, written by useTune.ts — the only per-frame work
+     the site does (research R4). Defaults keep the page sane before the dial
+     has been touched, and in any context that never sets them. */
+  --tune: 0;
+  --detune: 1;
+
+  /* How far into each quarter of the band the needle is. Each weight stays at
+     0 until its segment starts and at 1 once it is past, so chaining the
+     mixes below produces one continuous piecewise interpolation (FR-011).
+     Stops are evenly spaced — palette.test.ts enforces that. */
+  --t1: clamp(0, calc(var(--tune) / 0.25), 1);
+  --t2: clamp(0, calc((var(--tune) - 0.25) / 0.25), 1);
+  --t3: clamp(0, calc((var(--tune) - 0.5) / 0.25), 1);
+  --t4: clamp(0, calc((var(--tune) - 0.75) / 0.25), 1);
+
+  /* Resolved travelling colours. Mixed in oklab so luminance stays
+     predictable between stops, which is what keeps contrast above 4.5:1
+     everywhere on the band (research R5). */
+  --color-bg: color-mix(
+    in oklab,
+    var(--stop-4-bg) calc(var(--t4) * 100%),
+    color-mix(
+      in oklab,
+      var(--stop-3-bg) calc(var(--t3) * 100%),
+      color-mix(
+        in oklab,
+        var(--stop-2-bg) calc(var(--t2) * 100%),
+        color-mix(in oklab, var(--stop-1-bg) calc(var(--t1) * 100%), var(--stop-0-bg))
+      )
+    )
+  );
+  --color-ink: color-mix(
+    in oklab,
+    var(--stop-4-ink) calc(var(--t4) * 100%),
+    color-mix(
+      in oklab,
+      var(--stop-3-ink) calc(var(--t3) * 100%),
+      color-mix(
+        in oklab,
+        var(--stop-2-ink) calc(var(--t2) * 100%),
+        color-mix(in oklab, var(--stop-1-ink) calc(var(--t1) * 100%), var(--stop-0-ink))
+      )
+    )
+  );
+  --color-accent: color-mix(
+    in oklab,
+    var(--stop-4-accent) calc(var(--t4) * 100%),
+    color-mix(
+      in oklab,
+      var(--stop-3-accent) calc(var(--t3) * 100%),
+      color-mix(
+        in oklab,
+        var(--stop-2-accent) calc(var(--t2) * 100%),
+        color-mix(in oklab, var(--stop-1-accent) calc(var(--t1) * 100%), var(--stop-0-accent))
+      )
+    )
+  );
+  --color-ink-muted: color-mix(in oklab, var(--color-ink) 74%, var(--color-bg));
+  --color-surface: color-mix(in oklab, var(--color-bg) 84%, var(--color-ink));
+  --color-focus: #ffffff;
 
   /* Spacing */
   --space-1: 0.25rem;
@@ -34,7 +97,7 @@
   --radius-m: 12px;
   --radius-l: 20px;
 
-  /* Tap targets: usable one-handed in a moving car (FR-010). */
+  /* Tap targets: thumb-sized, one-handed (FR-016). */
   --tap-min: 44px;
   --tap-primary: 64px;
 
@@ -44,12 +107,14 @@
   --text-l: 1.25rem;
   --text-xl: 1.625rem;
   --text-xxl: 2.125rem;
+  --text-display: clamp(2.5rem, 12vw, 5rem);
   --font-body:
     system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --font-dial:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 
   /* Motion (collapsed by the reduced-motion block in global.css) */
-  --motion-route: 700ms;
-  --motion-pop: 300ms;
-  --motion-sheet: 350ms;
-  --motion-crossfade: 600ms;
+  --motion-lock: 240ms;
+  --motion-reveal: 320ms;
+  --motion-drift: 5s;
 }

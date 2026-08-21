@@ -1,0 +1,478 @@
+/* The instrument. Layout is a fixed frame with one scrolling surface inside
+   it: the band. Nothing else on the page scrolls (FR-016). */
+
+.radio {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.radio__top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: baseline;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4) var(--space-2);
+}
+
+.radio__title {
+  margin: 0;
+  font-family: var(--font-dial);
+  font-size: var(--text-m);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+.radio__controls {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.radio__link,
+.radio__sound {
+  display: inline-flex;
+  gap: var(--space-2);
+  align-items: center;
+  min-height: var(--tap-min);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-s);
+  color: var(--color-ink);
+  background: none;
+  border: 1px solid color-mix(in oklab, var(--color-ink) 35%, transparent);
+  border-radius: var(--radius-m);
+  cursor: pointer;
+}
+
+.radio__notice {
+  margin: 0 var(--space-4) var(--space-2);
+  padding: var(--space-3);
+  font-size: var(--text-s);
+  background: var(--color-surface);
+  border-radius: var(--radius-m);
+}
+
+/* The screen: static and, when tuned in, the broadcast. */
+.radio__screen {
+  position: relative;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  padding: var(--space-4);
+  overflow: hidden;
+}
+
+/* The region takes focus when a station lands, so its ring has to look like
+   part of the instrument rather than a stray browser box — while staying
+   clearly visible for anyone arriving by keyboard. */
+.broadcast:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 6px;
+  border-radius: var(--radius-m);
+}
+
+.broadcast {
+  position: relative;
+  z-index: 1;
+  max-width: 34rem;
+  max-height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  animation: broadcast-in var(--motion-reveal) cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes broadcast-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem) scale(0.985);
+  }
+}
+
+.broadcast__ident {
+  display: flex;
+  gap: var(--space-3);
+  align-items: baseline;
+  margin-bottom: var(--space-2);
+  font-family: var(--font-dial);
+  color: var(--color-accent);
+}
+
+.broadcast__freq {
+  font-size: var(--text-xl);
+  font-variant-numeric: tabular-nums;
+}
+
+.broadcast__callsign {
+  font-size: var(--text-s);
+  letter-spacing: 0.2em;
+}
+
+.broadcast__name {
+  font-size: clamp(1.75rem, 7vw, var(--text-xxl));
+  line-height: 1.05;
+}
+
+.broadcast__figure {
+  margin: 0 0 var(--space-4);
+}
+
+.broadcast__figure img {
+  width: 100%;
+  /* Capped hard: the memory is the point and the picture is the setting, so
+     on a phone both have to be on screen at once. */
+  max-height: min(24svh, 210px);
+  object-fit: cover;
+  border-radius: var(--radius-m);
+}
+
+.broadcast__figure figcaption {
+  margin-top: var(--space-1);
+  font-size: 0.75rem;
+  color: var(--color-ink-muted);
+}
+
+.broadcast__translation {
+  padding: var(--space-3);
+  background: var(--color-surface);
+  border-left: 3px solid var(--color-accent);
+  border-radius: 0 var(--radius-m) var(--radius-m) 0;
+}
+
+.broadcast__translation-label {
+  display: block;
+  font-size: var(--text-s);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+/* ---------- The band ---------- */
+
+.dial {
+  flex: 0 0 auto;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  background: color-mix(in oklab, var(--color-bg) 78%, #000);
+  border-top: 1px solid color-mix(in oklab, var(--color-accent) 40%, transparent);
+}
+
+.dial__readout {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-4) 0;
+}
+
+.dial__progress {
+  margin: 0;
+  font-family: var(--font-dial);
+  font-size: var(--text-s);
+  letter-spacing: 0.1em;
+  color: var(--color-ink-muted);
+}
+
+.dial__signoff {
+  min-height: var(--tap-min);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-s);
+  color: var(--color-bg);
+  background: var(--color-accent);
+  border-radius: var(--radius-m);
+}
+
+.dial__frame {
+  position: relative;
+  height: clamp(120px, 22svh, 190px);
+}
+
+/* The needle sits still at the centre; the band moves under it. */
+.dial__needle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  z-index: 2;
+  width: 2px;
+  background: var(--color-accent);
+  /* Sharpest when tuned in, softest deep in the static. */
+  box-shadow: 0 0 calc(4px + var(--detune) * 14px) var(--color-accent);
+  opacity: calc(1 - var(--detune) * 0.35);
+  transform: translateX(-50%);
+}
+
+.dial__band {
+  height: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  /* Proximity, never mandatory: mandatory snapping would make it impossible
+     to come to rest in the static between two stations, which is a state the
+     mechanic depends on (contract §2). */
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.dial__band::-webkit-scrollbar {
+  display: none;
+}
+
+.dial__track {
+  position: relative;
+  width: calc(var(--band-screens, 6) * 100%);
+  height: 100%;
+  background-image: repeating-linear-gradient(
+    to right,
+    color-mix(in oklab, var(--color-ink) 30%, transparent) 0 1px,
+    transparent 1px 14px
+  );
+  background-position: 0 60%;
+  background-size: 100% 40%;
+  background-repeat: repeat-x;
+}
+
+.dial__mark {
+  --mark-w: 92px;
+
+  position: absolute;
+  top: 0;
+  /* The mark's centre lands exactly where --tune says its frequency is: the
+     track is padded by half a viewport at each end, so scrollLeft/travel and
+     positionOf() agree (src/domain/band.ts). */
+  left: calc(
+    (0.5 + var(--pos) * (var(--band-screens, 6) - 1)) / var(--band-screens, 6) * 100% -
+      var(--mark-w) / 2
+  );
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  align-items: center;
+  justify-content: center;
+  width: var(--mark-w);
+  height: 100%;
+  padding: 0;
+  font-family: var(--font-dial);
+  color: var(--color-ink-muted);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  scroll-snap-align: center;
+}
+
+.dial__mark::before {
+  content: "";
+  width: 3px;
+  height: 42%;
+  background: currentcolor;
+  border-radius: 2px;
+}
+
+.dial__mark[data-received="true"] {
+  color: var(--color-accent);
+}
+
+.dial__mark[data-received="true"]::before {
+  box-shadow: 0 0 10px var(--color-accent);
+}
+
+.dial__mark[aria-selected="true"] {
+  color: var(--color-ink);
+}
+
+.dial__mark-freq {
+  font-size: var(--text-s);
+  font-variant-numeric: tabular-nums;
+}
+
+.dial__mark-name {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- Reduced motion: a stepper instead of a flight ---------- */
+
+.stepper {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: center;
+  padding: 0 var(--space-4) var(--space-3);
+}
+
+.stepper__button {
+  min-height: var(--tap-min);
+  padding: var(--space-2) var(--space-4);
+  color: var(--color-ink);
+  background: var(--color-surface);
+  border: 1px solid color-mix(in oklab, var(--color-ink) 35%, transparent);
+  border-radius: var(--radius-m);
+  cursor: pointer;
+}
+
+.stepper__button[disabled] {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* ---------- Station guide ---------- */
+
+.guide {
+  flex: 1;
+  padding: var(--space-4);
+  overflow-y: auto;
+}
+
+.guide__top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.guide__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.guide__link {
+  display: grid;
+  grid-template-columns: 4.5rem 1fr auto;
+  gap: var(--space-3);
+  align-items: baseline;
+  min-height: var(--tap-primary);
+  padding: var(--space-3) var(--space-2);
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px solid color-mix(in oklab, var(--color-ink) 20%, transparent);
+}
+
+.guide__freq {
+  font-family: var(--font-dial);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-accent);
+}
+
+.guide__name {
+  font-size: var(--text-l);
+}
+
+.guide__state {
+  font-size: var(--text-s);
+  color: var(--color-ink-muted);
+}
+
+.guide__item[data-received="true"] .guide__state {
+  color: var(--color-accent);
+}
+
+/* ---------- Sign-off and keepsake ---------- */
+
+.signoff {
+  flex: 1;
+  padding: var(--space-5) var(--space-4);
+  overflow-y: auto;
+}
+
+.signoff__ident {
+  margin: 0;
+  font-family: var(--font-dial);
+  font-size: var(--text-s);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+.signoff__note {
+  max-width: 34rem;
+  font-size: var(--text-l);
+  text-wrap: pretty;
+}
+
+.keepsake {
+  max-width: 34rem;
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid color-mix(in oklab, var(--color-accent) 45%, transparent);
+  border-radius: var(--radius-l);
+}
+
+.signoff__heading {
+  font-size: var(--text-l);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+}
+
+.signoff__list {
+  margin: 0 0 var(--space-4);
+  padding: 0;
+  list-style: none;
+}
+
+.signoff__list li + li {
+  border-top: 1px solid color-mix(in oklab, var(--color-ink) 15%, transparent);
+}
+
+.signoff__list a {
+  display: flex;
+  gap: var(--space-3);
+  align-items: baseline;
+  min-height: var(--tap-min);
+  padding: var(--space-2) 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.signoff__freq {
+  min-width: 3.5rem;
+  font-family: var(--font-dial);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-accent);
+}
+
+.signoff__count {
+  font-size: var(--text-s);
+  color: var(--color-ink-muted);
+}
+
+/* ---------- Debug ring (?debug=1) ---------- */
+
+.debug-panel {
+  position: fixed;
+  right: var(--space-2);
+  bottom: var(--space-2);
+  z-index: 10;
+  max-width: 22rem;
+  max-height: 40svh;
+  padding: var(--space-2);
+  overflow-y: auto;
+  font-family: var(--font-dial);
+  font-size: 0.75rem;
+  color: var(--color-ink);
+  background: color-mix(in oklab, var(--color-bg) 88%, #000);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-m);
+}
+
+.debug-panel ol {
+  margin: var(--space-2) 0 0;
+  padding-left: var(--space-4);
+}
+
+.radio__sound-note {
+  max-width: 16rem;
+  margin: 0;
+  font-size: var(--text-s);
+  color: var(--color-ink-muted);
+}
