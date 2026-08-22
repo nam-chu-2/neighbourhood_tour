@@ -23,7 +23,7 @@ What changes:
 | Tuning, static, and lock-in as the mechanic | **Editorial craft** — photography, typographic scale, and pacing |
 | Received/unreceived progress and the sign-off keepsake | Nothing: the page is **read**, not played |
 | Optional synthesised sound | Nothing: the page is silent |
-| The dial as the route | A **stylised, illustrated route line** with the six stops marked |
+| The dial as the route | A **stylised, illustrated route line** with the seven stops marked |
 
 ### The Concept
 
@@ -51,11 +51,11 @@ typography, and the pacing of the scroll.
 - Q: Does any interactive mechanic survive, or is this now a page you simply read? → A:
   **Pure editorial, read-only.** No unlocking, no progress tracking, no keepsake. The wow
   comes from photography, typography, scale, and scroll craft.
-- Q: How should the six Bells Corners places be organised on the page? → A: **Numbered
+- Q: How should the seven Bells Corners places be organised on the page? → A: **Numbered
   itinerary entries, Stop 1 through Stop 6**, each with a headline, image, and story, the
   way an expedition itinerary presents days.
 - Q: Does the route map come back, given it was removed in the previous pivot? → A: **Yes
-  — a stylised, illustrated route line** with the six stops marked. Decorative and
+  — a stylised, illustrated route line** with the seven stops marked. Decorative and
   editorial, **not** an interactive geographic map: no map library and no tile provider,
   preserving the zero-cost, no-API-key constraint.
 - Q: What should happen to the dial implementation built for 002? → A: **Delete it**,
@@ -69,14 +69,14 @@ A co-worker opens the link on their phone. A full-bleed photograph fills the scr
 the expedition's title over it and a single line saying what this is. Scrolling down, they
 find a short strip of facts — how long the drive takes, how far it goes, how many stops —
 then an overview that explains Bells Corners to someone whose Ottawa stops at the
-Greenbelt. Below that, the route: a drawn line with six marked stops. Then the journey
+Greenbelt. Below that, the route: a drawn line with seven marked stops. Then the journey
 itself, one numbered stop after another, each with a headline, a photograph, the author's
 first-person story, and where supplied, a "downtown translation" tying it to something
 they already know. At the end, a closing note and the credits. They read it start to
 finish in a few minutes, on one thumb, and nothing asks them to do anything but read.
 
 **Why this priority**: This is the product. Without the hero, the overview, the route, the
-six stops, and the closing, there is no tour.
+seven stops, and the closing, there is no tour.
 
 **Independent Test**: On a phone, open the link and scroll from top to bottom, confirming
 every section is present, every stop shows its headline, image, story, and translation,
@@ -88,7 +88,7 @@ and no content is clipped or unreachable. Delivers the complete tour on its own.
    they see a full-bleed opening image with the title legible over it, and no horizontal
    scrolling at any width down to 360 px.
 2. **Given** the visitor scrolls past the opening, **When** they continue, **Then** they
-   meet, in order: the facts strip, the overview, the route illustration, the six stops in
+   meet, in order: the facts strip, the overview, the route illustration, the seven stops in
    numbered order, the closing note, and the credits.
 3. **Given** the visitor reaches a stop, **When** they read it, **Then** it shows its
    number, its headline, at least one image with a text alternative, the first-person
@@ -112,7 +112,7 @@ The page should feel commissioned rather than assembled. Photographs run to the 
 of the screen and are given room. The title carries real typographic weight. Sections
 arrive with deliberate pacing as the visitor scrolls — image and text settling into place
 rather than simply appearing. The route line draws itself as it comes into view, and the
-six stop markers land along it. Nothing is decorative at the cost of readable text, a
+seven stop markers land along it. Nothing is decorative at the cost of readable text, a
 still page for anyone who prefers reduced motion, or the speed of a phone on mobile data.
 
 **Why this priority**: "Knock them off their feet" is the stated goal, and with the
@@ -128,7 +128,7 @@ same page complete and still, with nothing missing.
 1. **Given** the visitor scrolls into a new section, **When** it enters view, **Then** it
    settles into place within about half a second and is immediately readable.
 2. **Given** the visitor scrolls to the route, **When** it enters view, **Then** the route
-   line and its six stop markers resolve into their finished state.
+   line and its seven stop markers resolve into their finished state.
 3. **Given** the visitor has a reduced-motion preference set, **When** they read the page,
    **Then** no scroll-triggered motion plays, every section is visible in its finished
    state, and no content depends on an animation having run.
@@ -196,7 +196,7 @@ confirm each one is reached.
   duration, the distance, and the number of stops.
 - **FR-003**: The page MUST include an overview that frames Bells Corners for an audience
   who knows only downtown Ottawa.
-- **FR-004**: The page MUST include a stylised, illustrated route showing the six stops in
+- **FR-004**: The page MUST include a stylised, illustrated route showing the seven stops in
   order along it. The route MUST be decorative: it MUST NOT be an interactive or
   geographic map, MUST NOT depend on any external map service, and MUST NOT be the only
   way to reach any content.
@@ -248,7 +248,7 @@ confirm each one is reached.
   first-person story, and an optional downtown translation.
 - **Image**: A photograph or illustration supplied by the author; has a text alternative
   and a credit.
-- **Route**: The decorative illustrated line and the six marked positions along it.
+- **Route**: The decorative illustrated line and the seven marked positions along it.
 
 ## Success Criteria *(mandatory)*
 
@@ -285,9 +285,9 @@ confirm each one is reached.
   the reference is copied: no text, imagery, branding, or name.
 - **The wow now rests on the author's photographs.** With the mechanic gone, the page has
   nothing to hide behind: an expedition layout carrying placeholder illustrations will look
-  empty in a way the dial did not. Real photographs of the six places are a prerequisite
+  empty in a way the dial did not. Real photographs of the seven places are a prerequisite
   for the effect, not a finishing touch.
-- The tour comprises six stops and is designed to be read in about 5 minutes.
+- The tour comprises seven stops and is designed to be read in about 5 minutes.
 - The author supplies all content — title, facts, overview, stop headlines, stories,
   downtown translations, and photography — authored once and baked into the site. No
   content-management or editing interface is in scope.

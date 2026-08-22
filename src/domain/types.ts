@@ -1,103 +1,75 @@
-// Domain types per specs/002-radio-dial-tour/data-model.md.
+// Domain types per specs/003-editorial-expedition-page/data-model.md.
 //
-// Two data domains: authored content (static, baked into the build) and
-// visitor state (per device, localStorage). A third category — tuning state —
-// is transient, and is deliberately split: its continuous part lives in CSS
-// custom properties (--tune / --detune, never React state), its discrete part
-// is the reducer below.
+// One data domain: authored content, static and baked into the build. There is
+// no visitor state — 001 stored photographs, 002 stored received stations, and
+// this feature stores nothing at all, on the device or anywhere else (FR-020).
+//
+// The only other structure is the image manifest, generated at build time so
+// every image's box can be reserved before its bytes arrive.
 
-// ---------- Authored content ----------
-
-/** The frequency range the dial spans. */
-export interface Band {
-  min: number;
-  max: number;
+export interface ExpeditionFact {
+  label: string;
+  value: string;
 }
 
-export type VisualKind = "photo" | "illustration";
-
-export interface Visual {
-  /** Asset URL (Vite-resolved) for a file under src/content/media/. */
+export interface Image {
+  /** Path to the source photograph under src/content/media/. */
   src: string;
-  /** Required, meaningful text alternative (FR-021). */
+  /** Required, meaningful text alternative (FR-019). */
   alt: string;
   credit: string;
-  kind: VisualKind;
+  /** Where to anchor the crop when the frame is tighter than the photograph. */
+  focus?: "top" | "centre" | "bottom";
 }
 
-export interface Station {
-  /** URL-safe slug, stable — used in deep links (FR-018) and storage keys. */
+export interface Stop {
+  /** URL-safe slug and anchor target; stable once shared (FR-014). */
   id: string;
-  /** 1-based, unique, contiguous, in the order the places occur along the road. */
-  order: number;
-  /** Position on the band and the on-screen ident, e.g. 101.7. */
-  frequency: number;
-  name: string;
-  /** Optional decorative ident; never the only carrier of meaning. */
-  callSign?: string;
-  /** Optional very short label printed on the band; falls back to the frequency. */
-  dialLabel?: string;
-  /** At least one; the first is the hero visual (FR-007). */
-  visuals: Visual[];
-  /** First-person story. */
-  memory: string;
-  /** Optional comparison for a downtown-only audience. */
+  /** 1-based, unique, contiguous, matching the order on the page. */
+  number: number;
+  headline: string;
+  /** Optional single line under the headline. */
+  standfirst?: string;
+  /** At least one; the first is the lead photograph (FR-005). */
+  images: Image[];
+  /** First-person paragraphs. */
+  story: string[];
+  /** Optional tie to something familiar downtown (FR-006). */
   downtownTranslation?: string;
 }
 
-export interface Broadcast {
+export interface Expedition {
   id: "bells-corners";
   title: string;
-  /** The single instruction shown before the first lock-in (FR-001). */
-  intro: string;
-  band: Band;
-  stations: Station[];
-  /** The closing broadcast, shown once every station is received (FR-012). */
-  signOff: string;
+  /** The single line under the title saying what this is (FR-001). */
+  dek: string;
+  heroImage: Image;
+  /** Duration, distance, number of stops — at minimum (FR-002). */
+  facts: ExpeditionFact[];
+  /** Framing for a reader whose Ottawa stops at the Greenbelt (FR-003). */
+  overview: string[];
+  stops: Stop[];
+  closing: string;
+  credits: string;
 }
 
-/** One stop in the palette the band travels through (FR-011). */
-export interface PaletteStop {
-  /** Position along the band, 0–1. */
-  at: number;
-  name: string;
-  bg: string;
-  ink: string;
-  accent: string;
+// ---------- Generated image manifest ----------
+
+export type ImageFormat = "avif" | "webp" | "jpeg";
+
+export interface Variant {
+  format: ImageFormat;
+  width: number;
+  url: string;
+  bytes: number;
 }
 
-// ---------- Visitor state (per device) ----------
-
-export interface Reception {
-  stationId: string;
-  /** ISO datetime of the lock-in. */
-  at: string;
+export interface ImageManifestEntry {
+  /** The source path, exactly as written in Image.src — the manifest's key. */
+  source: string;
+  /** Intrinsic dimensions, rendered into every <img> so nothing shifts. */
+  width: number;
+  height: number;
+  aspectRatio: number;
+  variants: Variant[];
 }
-
-export interface VisitorState {
-  version: number;
-  receptions: Reception[];
-  /** The visitor's sound preference; sound is off until they ask for it (FR-014). */
-  soundOn: boolean;
-  startedAt?: string;
-  completedAt?: string;
-}
-
-// ---------- Tuning (transient) ----------
-
-export type TuningState =
-  | { phase: "offStation" }
-  | { phase: "settling"; candidateId: string }
-  | { phase: "locked"; stationId: string };
-
-export type TuningEvent =
-  | {
-      type: "SCROLL";
-      nearestId: string | null;
-      /** Distance from the nearest station's centre, in band units (0–1). */
-      distance: number;
-      lockRadius: number;
-    }
-  | { type: "SETTLED" }
-  | { type: "FOCUS_STATION"; stationId: string }
-  | { type: "OPEN_STATION"; stationId: string };

@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://neighbourhood-tour.local/contracts/expedition-content.schema.json",
+  "title": "Expedition content (authored, static)",
+  "description": "The single authored artefact of the site: the Bells Corners expedition page. Validated by tests/unit/expeditionContent.test.ts. Cross-field rules JSON Schema cannot express (contiguous stop numbering, required fact labels, unique ids, every image present in the generated manifest) are asserted in that same test — see data-model.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "title", "dek", "heroImage", "facts", "overview", "stops", "closing", "credits"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "const": "bells-corners"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The full-bleed opening headline (FR-001)."
+    },
+    "dek": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160,
+      "description": "One line under the title saying what this is (FR-001)."
+    },
+    "heroImage": { "$ref": "#/$defs/Image" },
+    "facts": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 5,
+      "description": "The facts strip. Must cover duration, distance and number of stops (FR-002).",
+      "items": { "$ref": "#/$defs/ExpeditionFact" }
+    },
+    "overview": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 4,
+      "description": "Paragraphs framing Bells Corners for a downtown-only reader (FR-003).",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "stops": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": { "$ref": "#/$defs/Stop" }
+    },
+    "closing": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The closing note (FR-007)."
+    },
+    "credits": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Imagery credit line (FR-007)."
+    }
+  },
+  "$defs": {
+    "Stop": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "number", "headline", "images", "story"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+          "description": "URL-safe slug and anchor target. Stable once the link has been shared (FR-014)."
+        },
+        "number": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 7,
+          "description": "1-based, unique, contiguous, matching array order (FR-005)."
+        },
+        "headline": { "type": "string", "minLength": 1 },
+        "standfirst": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Optional single line under the headline."
+        },
+        "images": {
+          "type": "array",
+          "minItems": 1,
+          "description": "The first is the stop's lead photograph (FR-005).",
+          "items": { "$ref": "#/$defs/Image" }
+        },
+        "story": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4,
+          "description": "First-person paragraphs (FR-005).",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "downtownTranslation": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Optional tie to something familiar downtown (FR-006)."
+        }
+      }
+    },
+    "Image": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["src", "alt", "credit"],
+      "properties": {
+        "src": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Path to the source photograph under src/content/media/. Every variant is derived from it at build time; must have an entry in the generated manifest."
+        },
+        "alt": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Meaningful text alternative — required for every image (FR-019)."
+        },
+        "credit": { "type": "string", "minLength": 1 },
+        "focus": {
+          "type": "string",
+          "enum": ["top", "centre", "bottom"],
+          "description": "Where to anchor the crop when the frame is tighter than the photograph. Defaults to centre."
+        }
+      }
+    },
+    "ExpeditionFact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "value"],
+      "properties": {
+        "label": { "type": "string", "minLength": 1 },
+        "value": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

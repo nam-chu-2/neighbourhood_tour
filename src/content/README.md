@@ -1,60 +1,65 @@
-# Authoring the broadcast
+# Writing the expedition
 
-Everything a visitor reads or sees lives in this folder. You do not need to touch
-anything else to make the tour yours.
+Everything a reader sees is in this folder. You do not need to touch anything
+else to make the page yours.
 
 ## The files
 
 | File | What it holds |
 | --- | --- |
-| `broadcast.ts` | The tour: its title, the opening instruction, the band, every station, and the sign-off. |
-| `palette.ts` | The five colours the dial travels through, from predawn to neon. |
-| `media/` | Your images. `noise.png` is generated — leave it alone. |
+| `expedition.ts` | The page: title, dek, facts, overview, seven stops, closing, credits. |
+| `media/` | Your photographs. Drop them in here. |
+| `images.generated.ts` | Generated — do not edit. Written by `npm run images`. |
 
-Run `npm test` after every edit. The tests are the authoring guardrail: they fail
-loudly and specifically when something in here would break the tour.
+Run `npm test` after every edit. The tests are the guardrail: they fail loudly
+and specifically when something in here would break the page.
 
-## Stations
+## The shape of it
 
-Each station is one place in Bells Corners. Fill in:
+- **`title`** and **`dek`** — the opening. The dek is one line saying what this
+  is; keep it under 160 characters.
+- **`facts`** — three to five label/value pairs. Duration, distance and number of
+  stops are required; the test checks for them by name.
+- **`overview`** — one to four paragraphs. This is where you explain Bells
+  Corners to someone whose Ottawa stops at the Greenbelt.
+- **`stops`** — exactly seven, numbered 1 to 7 in the order you would drive them.
+  Each has a headline, an optional standfirst, at least one image, one to four
+  story paragraphs, and an optional `downtownTranslation`.
+- **`closing`** and **`credits`** — the end.
 
-- **`name`** — what you would call it out loud.
-- **`frequency`** — where it sits on the dial, e.g. `99.5`. **The order of the
-  frequencies is the order of the drive**, so list them the way you would pass
-  the places. Two rules: they must increase down the list, and neighbours must
-  be at least `0.4` apart, so their lock zones cannot overlap.
-- **`memory`** — the first-person story. This is the heart of it; write it the
-  way you would say it in the car.
-- **`downtownTranslation`** — optional, and the thing that makes it land for
-  people who only know the core: "this was our Rideau Centre, all eight shops of
-  it."
-- **`callSign`** — optional flavour, e.g. `CPLZ`. Decorative only; never put
-  meaning here that is not also in the name or the memory.
-- **`visuals`** — at least one. Every visual needs an **`alt`** that describes
-  what is in it (someone who cannot see the image is relying on it) and a
-  **`credit`**.
+The **`downtownTranslation`** is the field that does the most work for the least
+effort. "This was our Rideau Centre, all one shop of it" lands harder than a
+paragraph of description, because it is written in a language the reader already
+speaks.
 
-Six to ten stations is the intended length — long enough to be a tour, short
-enough to hold attention.
+## Stop ids
 
-## The `id` field
+An id is a stop's permanent address: it is the anchor in a shareable link
+(`…/#our-lady-of-peace`). Change one after you have sent the link round and you break it.
+Pick it once, lower case with hyphens, and leave it alone.
 
-An id is a station's permanent address: it appears in shareable links and in the
-visitor's saved progress. Change one after you have sent the link around and you
-break both. Pick it once, in lower case with hyphens, and leave it.
+## Photographs
 
-## Palette
+**This is the part that decides whether the page works.** An expedition layout
+is mostly photography — it has no mechanic to hide behind. With the stand-in
+images it will look like a template, because it is one.
 
-Five stops, each with a background, an ink colour for text, and an accent. The
-dial blends between them as the visitor tunes, so a stop is not a theme — it is a
-moment in the light.
+1. Put your photographs in `media/`, named to match the `src` in
+   `expedition.ts` (e.g. `stop-4-plaza.jpg`).
+2. Run `npm run images`.
 
-Any colour you choose has to stay readable, including everywhere *between* two
-stops. `npm test` checks that for you at every stop and at sampled points in
-between; if it fails, darken the background or brighten the ink.
+That generates each photograph at three widths in three formats and records its
+dimensions, which is what stops the page jumping around as images load. Commit
+the generated files — a fresh clone has to build without running the script.
 
-## Images
+Two rules the build enforces:
 
-Put them in `media/` and import them the way `broadcast.ts` already does. Keep
-them reasonably sized — the whole site is precached so it works offline, and
-every megabyte is a megabyte someone waits for on mobile data.
+- **Every image needs an `alt` and a `credit`.** The `alt` is what someone who
+  cannot see the photograph gets instead; describe what is in it, not that it is
+  a photograph.
+- **No generated variant may exceed 400 kB.** If the build fails on this, the
+  source is far larger than it needs to be — 2000px on the long edge is plenty.
+
+If a photograph named in `expedition.ts` is missing, the script generates a
+labelled placeholder rather than failing, and warns you. That is so you can write
+the page before you have been out with a camera; it is not meant to ship.

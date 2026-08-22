@@ -1,0 +1,493 @@
+/* The expedition page.
+
+   Layout rules that matter: prose is held to a measure, photographs run wider
+   than the prose, and the hero runs to the full bleed. Everything is finished
+   by default — the reveal in the last section of this file only ever applies
+   once JavaScript has said it can (research R1). */
+
+.page {
+  overflow-x: clip;
+}
+
+.skip-link {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-2);
+  z-index: 20;
+  padding: var(--space-2) var(--space-3);
+  color: var(--color-bg);
+  background: var(--color-paper);
+  border-radius: var(--radius-s);
+  transform: translateY(-200%);
+}
+
+.skip-link:focus-visible {
+  transform: translateY(0);
+}
+
+/* ---------- Shared rhythm ---------- */
+
+.facts,
+.overview,
+.route,
+.stop,
+.closing,
+.stop-nav {
+  padding-inline: var(--space-4);
+  margin-inline: auto;
+  max-width: var(--measure-wide);
+}
+
+.overview__prose,
+.stop__prose {
+  max-width: var(--measure);
+  font-size: var(--text-l);
+}
+
+.figure {
+  margin: 0;
+}
+
+.figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: var(--color-bg-raised);
+  border-radius: var(--radius-m);
+}
+
+.figure__credit {
+  margin-top: var(--space-2);
+  font-size: var(--text-s);
+  color: var(--color-ink-muted);
+}
+
+/* ---------- Hero ---------- */
+
+.hero {
+  position: relative;
+  display: grid;
+  min-height: 92svh;
+  isolation: isolate;
+}
+
+.hero__media,
+.hero__text {
+  grid-area: 1 / 1;
+}
+
+.hero__media {
+  position: relative;
+  overflow: hidden;
+}
+
+.hero__figure,
+.hero__figure picture {
+  display: block;
+  height: 100%;
+}
+
+.hero__figure img {
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0;
+}
+
+/* The hero credit sits with the rest of the credits, not over the title. */
+.hero__figure .figure__credit {
+  position: absolute;
+  right: var(--space-3);
+  bottom: var(--space-3);
+  margin: 0;
+  font-size: 0.6875rem;
+  color: var(--color-ink-muted);
+}
+
+/* The scrim: the guarantee that hero text stays legible over ANY photograph.
+   Keep --scrim-colour / --scrim-alpha in step with HERO_SCRIM in
+   src/domain/scrim.ts — tests/unit/scrim.test.ts proves that pair clears 4.5:1
+   over both white and black, which bounds every image in between.
+
+   It is bottom-weighted rather than flat: a flat scrim strong enough to
+   protect the text also flattens the photograph, and the photograph is what
+   the page is selling. The gradient reaches the guaranteed alpha by 58%, and
+   the hero text is laid out below that line. */
+.hero__scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    color-mix(in srgb, var(--scrim-colour) 12%, transparent) 34%,
+    color-mix(in srgb, var(--scrim-colour) calc(var(--scrim-alpha) * 100%), transparent) 58%,
+    color-mix(in srgb, var(--scrim-colour) 92%, transparent) 100%
+  );
+}
+
+.hero__text {
+  position: relative;
+  z-index: 1;
+  /* Sits inside the strong end of the scrim (below the 58% line), which is
+     what makes the contrast guarantee apply where the text actually is. */
+  align-self: end;
+  width: 100%;
+  max-width: var(--measure-wide);
+  padding: var(--space-6) var(--space-4) var(--space-7);
+  margin-inline: auto;
+}
+
+.hero__eyebrow {
+  margin: 0 0 var(--space-3);
+  font-family: var(--font-body);
+  font-size: var(--text-s);
+  font-weight: 600;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+.hero__title {
+  margin: 0 0 var(--space-4);
+  font-size: var(--text-display);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--color-ink);
+}
+
+.hero__dek {
+  max-width: var(--measure);
+  margin: 0;
+  font-size: var(--text-l);
+  color: var(--color-ink);
+  text-wrap: pretty;
+}
+
+/* ---------- Facts ---------- */
+
+.facts {
+  padding-block: var(--space-6);
+  border-bottom: 1px solid var(--color-rule);
+}
+
+.facts__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: var(--space-5);
+  margin: 0;
+}
+
+.facts__item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.facts__label {
+  font-size: var(--text-s);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+.facts__value {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  line-height: 1.2;
+}
+
+/* ---------- Overview ---------- */
+
+.overview {
+  padding-block: var(--space-7);
+}
+
+.overview__heading {
+  font-size: var(--text-2xl);
+  margin-bottom: var(--space-5);
+}
+
+/* ---------- Route ---------- */
+
+.route {
+  padding-block: var(--space-5) var(--space-7);
+}
+
+.route__svg {
+  width: 100%;
+  height: auto;
+}
+
+.route__line {
+  stroke: var(--color-accent);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+
+.route__mark circle {
+  fill: var(--color-bg);
+  stroke: var(--color-accent);
+  stroke-width: 2.5;
+}
+
+.route__mark text {
+  font-family: var(--font-display);
+  font-size: 20px;
+  fill: var(--color-ink-muted);
+}
+
+/* ---------- Stops ---------- */
+
+.stops {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  padding-block: var(--space-6) var(--space-8);
+}
+
+.stop {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.stop__head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* The number only hangs in a gutter once there is room for one; on a phone it
+   sits above the headline so both line up with the prose below. */
+@media (min-width: 48rem) {
+  .stop__head {
+    flex-direction: row;
+    gap: var(--space-4);
+    align-items: baseline;
+  }
+}
+
+.stop__number {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  line-height: 1;
+  color: var(--color-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.stop__headline {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-3xl);
+}
+
+.stop__standfirst {
+  margin: 0;
+  font-size: var(--text-l);
+  color: var(--color-ink-muted);
+  text-wrap: pretty;
+}
+
+.stop__translation {
+  padding: var(--space-4);
+  margin-top: var(--space-5);
+  background: var(--color-bg-raised);
+  border-left: 3px solid var(--color-accent);
+  border-radius: 0 var(--radius-m) var(--radius-m) 0;
+}
+
+.stop__translation p {
+  margin: 0;
+}
+
+.stop__translation-label {
+  margin-bottom: var(--space-2) !important;
+  font-family: var(--font-body);
+  font-size: var(--text-s);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+/* ---------- Stop navigation (wide screens only) ---------- */
+
+.stop-nav {
+  display: none;
+}
+
+@media (min-width: 64rem) {
+  .stop-nav {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: block;
+    padding-block: var(--space-3);
+    background: color-mix(in srgb, var(--color-bg) 92%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--color-rule);
+  }
+
+  .stop-nav__title {
+    margin: 0 0 var(--space-2);
+    font-size: var(--text-s);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+  }
+
+  .stop-nav__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .stop-nav__link {
+    display: flex;
+    gap: var(--space-2);
+    align-items: baseline;
+    min-height: var(--tap-min);
+    align-content: center;
+    padding-block: var(--space-2);
+    color: var(--color-ink-muted);
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+  }
+
+  .stop-nav__link:hover {
+    color: var(--color-ink);
+  }
+
+  .stop-nav__link[aria-current="true"] {
+    color: var(--color-ink);
+    border-bottom-color: var(--color-accent);
+  }
+
+  .stop-nav__number {
+    font-family: var(--font-display);
+    font-variant-numeric: tabular-nums;
+    color: var(--color-accent);
+  }
+}
+
+/* ---------- Closing ---------- */
+
+.closing {
+  padding-block: var(--space-7) var(--space-8);
+  border-top: 1px solid var(--color-rule);
+}
+
+.closing__heading {
+  font-size: var(--text-2xl);
+}
+
+.closing__note {
+  max-width: var(--measure);
+  font-size: var(--text-l);
+}
+
+.closing__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+  margin-bottom: var(--space-5);
+}
+
+.closing__share {
+  min-height: var(--tap-min);
+  padding: var(--space-2) var(--space-5);
+  color: var(--color-bg);
+  cursor: pointer;
+  background: var(--color-paper);
+  border: 0;
+  border-radius: var(--radius-s);
+}
+
+.closing__share-note,
+.closing__credits {
+  margin: 0;
+  font-size: var(--text-s);
+  color: var(--color-ink-muted);
+}
+
+/* ---------- Debug ---------- */
+
+.debug-panel {
+  position: fixed;
+  right: var(--space-2);
+  bottom: var(--space-2);
+  z-index: 20;
+  max-width: 22rem;
+  max-height: 40svh;
+  padding: var(--space-2);
+  overflow-y: auto;
+  font-size: 0.75rem;
+  background: var(--color-bg-raised);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-m);
+}
+
+/* ---------- Reveal ----------
+
+   Everything above is the FINISHED state. The rules below only bite once
+   JavaScript has marked the document as scripted AND the section has been put
+   into the hidden state by useReveal. If scripting never runs, or the visitor
+   prefers reduced motion, none of this applies and the page is simply
+   complete (research R1, FR-012, FR-021). */
+
+.js [data-revealed="hidden"] {
+  opacity: 0;
+  transform: translateY(1.5rem);
+}
+
+.js [data-revealed] {
+  transition:
+    opacity var(--motion-reveal) var(--motion-ease),
+    transform var(--motion-reveal) var(--motion-ease);
+}
+
+.js [data-revealed="revealed"] {
+  opacity: 1;
+  transform: none;
+}
+
+/* The route draws itself as it arrives. */
+.js .route[data-revealed="hidden"] .route__line {
+  stroke-dashoffset: 1;
+}
+
+.js .route .route__line {
+  transition: stroke-dashoffset var(--motion-draw) var(--motion-ease);
+}
+
+.js .route[data-revealed="hidden"] .route__mark {
+  opacity: 0;
+}
+
+.js .route .route__mark {
+  transition: opacity var(--motion-reveal) var(--motion-ease) 400ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .js [data-revealed],
+  .js [data-revealed="hidden"] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .js .route .route__line {
+    stroke-dashoffset: 0;
+    transition: none;
+  }
+
+  .js .route .route__mark {
+    opacity: 1;
+    transition: none;
+  }
+}

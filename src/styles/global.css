@@ -1,8 +1,10 @@
 @import "./tokens.css";
+@import "./fonts.css";
+@import "./page.css";
 
-/* The radio is a fixed instrument, not a document: the page itself never
-   scrolls, in either direction (FR-016). The only scrolling surface is the
-   band inside the dial. */
+/* This is a document, and it scrolls like one. 002 pinned the viewport because
+   the dial was an instrument; that shell is gone. What remains is a long page
+   that must never scroll sideways (FR-010). */
 
 *,
 *::before,
@@ -23,28 +25,28 @@ html {
 
 body {
   margin: 0;
-  overflow: hidden;
-  overscroll-behavior: none;
+  overflow-x: hidden;
   font-family: var(--font-body);
   font-size: var(--text-m);
-  line-height: 1.55;
+  line-height: 1.65;
   color: var(--color-ink);
   background-color: var(--color-bg);
-  transition: background-color 400ms linear, color 400ms linear;
+  -webkit-font-smoothing: antialiased;
 }
 
-#root {
-  display: flex;
-  flex-direction: column;
-  /* Small-viewport unit so a phone's browser chrome cannot clip the dial. */
-  height: 100svh;
+/* Anchored stops must not land jammed under the top edge (FR-014). */
+:target {
+  scroll-margin-top: var(--space-6);
 }
 
 h1,
 h2,
 h3 {
   margin: 0 0 var(--space-3);
-  line-height: 1.15;
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.04;
+  letter-spacing: -0.015em;
   text-wrap: balance;
 }
 
@@ -79,9 +81,8 @@ button {
   border: 0;
 }
 
-/* Reduced motion (FR-015, research R10): no inertia, no animated grain, no
-   smooth flights down the band. The still texture stays so the off-station
-   state remains legible — it carries meaning, so it is dimmed, not deleted. */
+/* Reduced motion (FR-012, research R10): nothing moves, and — because the
+   finished state is the CSS default — nothing is missing either. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

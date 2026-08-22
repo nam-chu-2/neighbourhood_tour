@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 
 const QUERY = "(prefers-reduced-motion: reduce)";
 
-/** True when the visitor prefers reduced motion (FR-011 / SC-006). */
+/** True when the visitor prefers reduced motion (FR-012 / SC-006). */
 export function useReducedMotion(): boolean {
-  const [reduced, setReduced] = useState(
-    () => window.matchMedia?.(QUERY).matches ?? false,
+  // No window during the build-time render, and no preference to read.
+  const [reduced, setReduced] = useState(() =>
+    typeof window === "undefined" ? false : (window.matchMedia?.(QUERY).matches ?? false),
   );
 
   useEffect(() => {

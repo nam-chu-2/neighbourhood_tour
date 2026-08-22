@@ -3,10 +3,10 @@ import path from "node:path";
 import { gzipSync } from "node:zlib";
 import { expect, test } from "@playwright/test";
 
-// SC-001 / SC-003 / SC-004 and the plan's performance budgets: the dial is
-// draggable ≤3 s on a mid-range phone over 4G, the needle answers a drag
-// within a tenth of a second, a station is readable within 1 s of settling,
-// and the initial JS stays ≤150 kB gzip. The webServer builds dist/ first.
+// SC-001 / SC-003 and the plan's budgets: the hero is readable ≤3 s on a
+// mid-range phone over 4G, the page does not shift as photographs arrive, the
+// initial JS stays ≤60 kB gzip, and no image variant is over 400 kB. The
+// webServer builds dist/ first.
 
 const DIST = path.resolve(import.meta.dirname, "../../dist");
 
@@ -14,7 +14,7 @@ test.describe("performance budgets", () => {
   // One static-analysis pass is enough; network throttling needs CDP.
   test.skip(({ browserName }) => browserName !== "chromium", "CDP throttling");
 
-  test("initial JS is ≤150 kB gzipped", () => {
+  test("initial JS is ≤60 kB gzipped", () => {
     test.skip(test.info().project.name !== "Desktop Chrome", "static check runs once");
     const indexHtml = readFileSync(path.join(DIST, "index.html"), "utf8");
     // Everything index.html references up front is the initial payload.
@@ -25,7 +25,7 @@ test.describe("performance budgets", () => {
       total += gzipSync(readFileSync(path.join(DIST, script))).byteLength;
     }
     expect(total, `initial JS gzip bytes (${scripts.join(", ")})`).toBeLessThanOrEqual(
-      150 * 1024,
+      60 * 1024,
     );
   });
 
@@ -52,7 +52,7 @@ test.describe("performance budgets", () => {
     expect(walk(DIST)).toBeLessThan(15 * 1024 * 1024);
   });
 
-  test("the dial is draggable within 3 s over throttled 4G", async ({ page }) => {
+  test("the hero is readable within 3 s over throttled 4G", async ({ page }) => {
     const client = await page.context().newCDPSession(page);
     await client.send("Network.enable");
     await client.send("Network.emulateNetworkConditions", {
@@ -64,47 +64,30 @@ test.describe("performance budgets", () => {
 
     const startedAt = Date.now();
     await page.goto("/");
-    await expect(page.getByTestId("band")).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     const elapsed = Date.now() - startedAt;
-    expect(elapsed, "ms until the dial is on screen and draggable").toBeLessThan(3000);
+    expect(elapsed, "ms until the title is readable").toBeLessThan(3000);
   });
 
-  test("the needle answers a drag within a tenth of a second", async ({ page }) => {
+  test("no image variant is over the 400 kB budget", () => {
+    test.skip(test.info().project.name !== "Desktop Chrome", "static check runs once");
+    const generated = path.join(DIST, "media/generated");
+    for (const file of readdirSync(generated)) {
+      const bytes = statSync(path.join(generated, file)).size;
+      expect(bytes, `${file} is over budget`).toBeLessThanOrEqual(400 * 1024);
+    }
+  });
+
+  test("the page does not shift as photographs load", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByTestId("band")).toBeVisible();
-
-    // Scroll the band and measure how long until --tune reflects it. This is
-    // the whole per-frame budget: one rAF-throttled listener writing two
-    // custom properties (research R4).
-    const latency = await page.evaluate(async () => {
-      const band = document.querySelector<HTMLElement>('[data-testid="band"]')!;
-      const before = getComputedStyle(document.documentElement).getPropertyValue("--tune");
-      const startedAt = performance.now();
-      band.scrollTo({ left: (band.scrollWidth - band.clientWidth) * 0.5, behavior: "auto" });
-      for (;;) {
-        await new Promise((resolve) => requestAnimationFrame(resolve));
-        const now = getComputedStyle(document.documentElement).getPropertyValue("--tune");
-        if (now !== before) return performance.now() - startedAt;
-        if (performance.now() - startedAt > 2000) return Number.POSITIVE_INFINITY;
-      }
-    });
-    expect(latency, "ms from scroll to --tune update").toBeLessThan(100);
+    // Every image must declare its intrinsic size, which is what reserves the
+    // box before the bytes arrive (research R2).
+    const undeclared = await page.evaluate(() =>
+      [...document.querySelectorAll("img")]
+        .filter((img) => !img.getAttribute("width") || !img.getAttribute("height"))
+        .map((img) => img.currentSrc || img.src),
+    );
+    expect(undeclared, "images with no declared dimensions").toEqual([]);
   });
 
-  test("a station is readable within a second of settling", async ({ page }) => {
-    await page.goto("/");
-    await expect(page.getByTestId("band")).toBeVisible();
-
-    const startedAt = Date.now();
-    await page.evaluate(() => {
-      const band = document.querySelector<HTMLElement>('[data-testid="band"]')!;
-      const mark = document.querySelector<HTMLElement>('[data-station-id="the-plaza"]')!;
-      band.scrollTo({
-        left: mark.offsetLeft + mark.offsetWidth / 2 - band.clientWidth / 2,
-        behavior: "auto",
-      });
-    });
-    await expect(page.getByTestId("broadcast")).toContainText("The Plaza");
-    expect(Date.now() - startedAt, "ms from settling to readable").toBeLessThan(1000);
-  });
 });

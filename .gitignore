@@ -4,6 +4,7 @@ node_modules/
 # Build output
 dist/
 dev-dist/
+dist-ssr/
 
 # Test output
 playwright-report/

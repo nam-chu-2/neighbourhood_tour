@@ -6,24 +6,46 @@
       name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
-    <meta name="theme-color" content="#1b3a2f" />
+    <meta name="theme-color" content="#12100e" />
     <meta name="referrer" content="no-referrer" />
-    <!-- Belt-and-braces: the app never uses these; honoured where the host
-         doesn't send a Permissions-Policy header (FR-015, T054). -->
+    <!-- Belt-and-braces: the page never uses these; honoured where the host
+         doesn't send a Permissions-Policy header (FR-020). -->
     <meta
       http-equiv="Permissions-Policy"
       content="geolocation=(), microphone=(), payment=(), usb=()"
     />
     <meta
       name="description"
-      content="A short ride-along tour of Bells Corners — snap each place to unlock its story."
+      content="An expedition through Bells Corners — seven stops in the village I grew up in."
     />
+    <!-- Linked from the document, not imported from JavaScript: the page must
+         be styled even when scripting never runs (research R1). -->
+    <link rel="stylesheet" href="/src/styles/global.css" />
     <link rel="icon" type="image/png" href="icon-192.png" />
     <link rel="apple-touch-icon" href="icon-192.png" />
-    <title>Bells Corners: The Drive</title>
+    <title>Bells Corners — An Expedition</title>
+    <link
+      rel="preload"
+      href="/fonts/fraunces-latin-variable.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <script>
+      // Marks the document scripted BEFORE first paint, so sections that are
+      // about to animate do not flash in and then hide. The timeout is the
+      // safety net: if enhance.ts never loads, the class comes off and the
+      // page renders finished rather than blank (research R1).
+      document.documentElement.classList.add("js");
+      setTimeout(function () {
+        if (!document.documentElement.dataset.enhanced) {
+          document.documentElement.classList.remove("js");
+        }
+      }, 2500);
+    </script>
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="/src/enhance.ts"></script>
   </body>
 </html>

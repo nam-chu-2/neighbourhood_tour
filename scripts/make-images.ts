@@ -1,0 +1,163 @@
+// Build-time image pipeline (research R2, R9). Run with `npm run images`.
+//
+// For every photograph the content references, this emits AVIF/WebP/JPEG at up
+// to three widths and records the source's intrinsic dimensions into
+// src/content/images.generated.ts. Those dimensions are what let every <img>
+// reserve its box before the bytes arrive, so the page does not shift under the
+// reader as photographs load.
+//
+// It fails the build if any variant exceeds the weight budget — the guardrail
+// against dropping an 8 MB phone photograph into a page read on mobile data.
+//
+// Missing sources are stood in for rather than fatal: the author is writing the
+// page before they have been out with a camera. Placeholders are logged loudly
+// and are meant to be replaced.
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { basename, extname, resolve } from "node:path";
+import sharp from "sharp";
+import { expedition } from "../src/content/expedition";
+import type { Image, ImageFormat, ImageManifestEntry, Variant } from "../src/domain/types";
+
+const ROOT = resolve(import.meta.dirname, "..");
+const MEDIA = resolve(ROOT, "src/content/media");
+const OUT_DIR = resolve(ROOT, "public/media/generated");
+const MANIFEST = resolve(ROOT, "src/content/images.generated.ts");
+
+const WIDTHS = [640, 1280, 1920];
+const FORMATS: ImageFormat[] = ["avif", "webp", "jpeg"];
+const MAX_VARIANT_BYTES = 400 * 1024;
+const PLACEHOLDER_SIZE = { width: 1920, height: 1280 };
+
+/** A stand-in photograph, so the page is buildable before the camera comes out. */
+async function makePlaceholder(target: string, label: string): Promise<void> {
+  const { width, height } = PLACEHOLDER_SIZE;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+    <defs>
+      <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#3b3a36"/>
+        <stop offset="60%" stop-color="#6d6455"/>
+        <stop offset="100%" stop-color="#8d7f68"/>
+      </linearGradient>
+    </defs>
+    <rect width="${width}" height="${height}" fill="url(#g)"/>
+    <text x="50%" y="49%" text-anchor="middle" fill="#f6f1e7" font-size="52"
+      font-family="Georgia, 'Times New Roman', serif">${label.replace(/[<&>]/g, "")}</text>
+    <text x="50%" y="55%" text-anchor="middle" fill="#e2d8c6" font-size="30"
+      font-family="Georgia, 'Times New Roman', serif" opacity="0.85">photograph to come</text>
+  </svg>`;
+  await sharp(Buffer.from(svg)).jpeg({ quality: 82 }).toFile(target);
+}
+
+async function encode(
+  source: string,
+  stem: string,
+  width: number,
+  format: ImageFormat,
+): Promise<Variant | null> {
+  const url = `${stem}-${width}.${format === "jpeg" ? "jpg" : format}`;
+  const target = resolve(OUT_DIR, url);
+  const pipeline = sharp(source).resize({ width, withoutEnlargement: true });
+
+  if (format === "avif") await pipeline.avif({ quality: 55 }).toFile(target);
+  else if (format === "webp") await pipeline.webp({ quality: 72 }).toFile(target);
+  else await pipeline.jpeg({ quality: 76, mozjpeg: true }).toFile(target);
+
+  const bytes = readFileSync(target).byteLength;
+  return { format, width, url, bytes };
+}
+
+async function main(): Promise<void> {
+  mkdirSync(MEDIA, { recursive: true });
+  rmSync(OUT_DIR, { recursive: true, force: true });
+  mkdirSync(OUT_DIR, { recursive: true });
+
+  const images: Image[] = [
+    expedition.heroImage,
+    ...expedition.stops.flatMap((stop) => stop.images),
+  ];
+
+  const seen = new Set<string>();
+  const entries: ImageManifestEntry[] = [];
+  const oversized: string[] = [];
+  const placeholders: string[] = [];
+
+  for (const image of images) {
+    if (seen.has(image.src)) continue;
+    seen.add(image.src);
+
+    const source = resolve(MEDIA, basename(image.src));
+    if (!existsSync(source)) {
+      await makePlaceholder(source, image.alt.slice(0, 60));
+      placeholders.push(basename(image.src));
+    }
+
+    const meta = await sharp(source).metadata();
+    const width = meta.width ?? PLACEHOLDER_SIZE.width;
+    const height = meta.height ?? PLACEHOLDER_SIZE.height;
+    const stem = basename(source, extname(source));
+
+    const variants: Variant[] = [];
+    for (const target of WIDTHS) {
+      // Never upscale: a 900px source gets 640 only.
+      if (target > width && variants.some((v) => v.width >= width)) continue;
+      const effective = Math.min(target, width);
+      if (variants.some((v) => v.width === effective)) continue;
+      for (const format of FORMATS) {
+        const variant = await encode(source, stem, effective, format);
+        if (!variant) continue;
+        if (variant.bytes > MAX_VARIANT_BYTES) {
+          oversized.push(`${variant.url} (${Math.round(variant.bytes / 1024)} kB)`);
+        }
+        variants.push(variant);
+      }
+    }
+
+    entries.push({
+      source: image.src,
+      width,
+      height,
+      aspectRatio: Number((width / height).toFixed(4)),
+      variants,
+    });
+  }
+
+  const body = `// GENERATED by scripts/make-images.ts — do not edit by hand.
+// Run \`npm run images\` after adding or replacing a photograph.
+//
+// Variants live under public/media/generated/, so their URLs are plain paths
+// resolved against the deployment base. They must NOT go through
+// import.meta.url: the build-time render happens in a separate SSR bundle, and
+// that would bake a file:/// path from the build machine into the shipped HTML.
+import type { ImageManifestEntry } from "../domain/types";
+
+const base = import.meta.env.BASE_URL;
+
+const url = (file: string): string => \`\${base}media/generated/\${file}\`;
+
+export const imageManifest: ImageManifestEntry[] = ${JSON.stringify(entries, null, 2).replace(
+    /"url": "([^"]+)"/g,
+    '"url": url("$1")',
+  )};
+
+/** Look up an entry by the source path written in the authored content. */
+export function lookupImage(source: string): ImageManifestEntry | undefined {
+  return imageManifest.find((entry) => entry.source === source);
+}
+`;
+  writeFileSync(MANIFEST, body);
+
+  const count = entries.reduce((sum, entry) => sum + entry.variants.length, 0);
+  console.log(`wrote ${entries.length} images (${count} variants) → ${MANIFEST}`);
+  if (placeholders.length > 0) {
+    console.warn(
+      `\n⚠  ${placeholders.length} placeholder source(s) generated — replace with real photographs:\n   ${placeholders.join("\n   ")}\n`,
+    );
+  }
+  if (oversized.length > 0) {
+    console.error(`\n✗ over the ${MAX_VARIANT_BYTES / 1024} kB variant budget:`);
+    for (const item of oversized) console.error(`   ${item}`);
+    process.exit(1);
+  }
+}
+
+await main();

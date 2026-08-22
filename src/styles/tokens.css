@@ -1,120 +1,64 @@
-/* Design tokens.
+/* Design tokens for an editorial page.
 
-   The palette is not fixed: it travels across the band from predawn to neon
-   (FR-011). Each stop is authored in src/content/palette.ts and written here
-   as a custom property; --tune interpolates between them in oklab, and
-   tests/unit/palette.test.ts holds every stop and every interpolated point at
-   4.5:1 or better. */
+   The colour is fixed rather than travelling (002's palette moved with the
+   dial; there is no dial). What matters here is the type scale — the page is
+   carrying its register through typography and photography — and the scrim,
+   which is the one colour decision with a correctness proof behind it
+   (src/domain/scrim.ts, tests/unit/scrim.test.ts). */
 :root {
-  /* Palette stops — keep in sync with src/content/palette.ts. */
-  --stop-0-bg: #0d1426;
-  --stop-0-ink: #e9eefb;
-  --stop-0-accent: #79b0ff;
-  --stop-1-bg: #0e2320;
-  --stop-1-ink: #e7f6f0;
-  --stop-1-accent: #6ed7a4;
-  --stop-2-bg: #2a1c0c;
-  --stop-2-ink: #fdf2e2;
-  --stop-2-accent: #f5b04a;
-  --stop-3-bg: #231027;
-  --stop-3-ink: #f7eafb;
-  --stop-3-accent: #dc93ff;
-  --stop-4-bg: #1b0a13;
-  --stop-4-ink: #ffeaf4;
-  --stop-4-accent: #ff6ba9;
-
-  /* Continuous tuning state, written by useTune.ts — the only per-frame work
-     the site does (research R4). Defaults keep the page sane before the dial
-     has been touched, and in any context that never sets them. */
-  --tune: 0;
-  --detune: 1;
-
-  /* How far into each quarter of the band the needle is. Each weight stays at
-     0 until its segment starts and at 1 once it is past, so chaining the
-     mixes below produces one continuous piecewise interpolation (FR-011).
-     Stops are evenly spaced — palette.test.ts enforces that. */
-  --t1: clamp(0, calc(var(--tune) / 0.25), 1);
-  --t2: clamp(0, calc((var(--tune) - 0.25) / 0.25), 1);
-  --t3: clamp(0, calc((var(--tune) - 0.5) / 0.25), 1);
-  --t4: clamp(0, calc((var(--tune) - 0.75) / 0.25), 1);
-
-  /* Resolved travelling colours. Mixed in oklab so luminance stays
-     predictable between stops, which is what keeps contrast above 4.5:1
-     everywhere on the band (research R5). */
-  --color-bg: color-mix(
-    in oklab,
-    var(--stop-4-bg) calc(var(--t4) * 100%),
-    color-mix(
-      in oklab,
-      var(--stop-3-bg) calc(var(--t3) * 100%),
-      color-mix(
-        in oklab,
-        var(--stop-2-bg) calc(var(--t2) * 100%),
-        color-mix(in oklab, var(--stop-1-bg) calc(var(--t1) * 100%), var(--stop-0-bg))
-      )
-    )
-  );
-  --color-ink: color-mix(
-    in oklab,
-    var(--stop-4-ink) calc(var(--t4) * 100%),
-    color-mix(
-      in oklab,
-      var(--stop-3-ink) calc(var(--t3) * 100%),
-      color-mix(
-        in oklab,
-        var(--stop-2-ink) calc(var(--t2) * 100%),
-        color-mix(in oklab, var(--stop-1-ink) calc(var(--t1) * 100%), var(--stop-0-ink))
-      )
-    )
-  );
-  --color-accent: color-mix(
-    in oklab,
-    var(--stop-4-accent) calc(var(--t4) * 100%),
-    color-mix(
-      in oklab,
-      var(--stop-3-accent) calc(var(--t3) * 100%),
-      color-mix(
-        in oklab,
-        var(--stop-2-accent) calc(var(--t2) * 100%),
-        color-mix(in oklab, var(--stop-1-accent) calc(var(--t1) * 100%), var(--stop-0-accent))
-      )
-    )
-  );
-  --color-ink-muted: color-mix(in oklab, var(--color-ink) 74%, var(--color-bg));
-  --color-surface: color-mix(in oklab, var(--color-bg) 84%, var(--color-ink));
+  /* Paper and ink. Warm rather than neutral: this is a print register. */
+  --color-bg: #12100e;
+  --color-bg-raised: #1b1815;
+  --color-paper: #f6f1e7;
+  --color-ink: #fdfaf4;
+  --color-ink-muted: #c9bfae;
+  --color-rule: #3a342d;
+  --color-accent: #c8894a;
   --color-focus: #ffffff;
 
-  /* Spacing */
+  /* The scrim behind text over photography. Keep in sync with HERO_SCRIM in
+     src/domain/scrim.ts — the unit test is what stops these drifting apart. */
+  --scrim-colour: #12100e;
+  --scrim-alpha: 0.62;
+
+  /* Spacing rhythm */
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
   --space-4: 1rem;
   --space-5: 1.5rem;
   --space-6: 2.5rem;
+  --space-7: 4rem;
+  --space-8: 6rem;
 
-  /* Radii */
-  --radius-s: 6px;
-  --radius-m: 12px;
-  --radius-l: 20px;
+  --radius-s: 4px;
+  --radius-m: 10px;
 
-  /* Tap targets: thumb-sized, one-handed (FR-016). */
+  /* Tap targets */
   --tap-min: 44px;
-  --tap-primary: 64px;
 
-  /* Type scale */
-  --text-s: 0.875rem;
-  --text-m: 1rem;
-  --text-l: 1.25rem;
-  --text-xl: 1.625rem;
-  --text-xxl: 2.125rem;
-  --text-display: clamp(2.5rem, 12vw, 5rem);
+  /* Type. Fraunces carries the headlines; the system stack carries the prose,
+     because body text at this length reads better in a UI face than in a
+     display serif. */
+  --font-display: "Fraunces", Iowan Old Style, "Palatino Linotype", Palatino,
+    Georgia, "Times New Roman", serif;
   --font-body:
     system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
-  --font-dial:
-    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 
-  /* Motion (collapsed by the reduced-motion block in global.css) */
-  --motion-lock: 240ms;
-  --motion-reveal: 320ms;
-  --motion-drift: 5s;
+  --text-s: 0.875rem;
+  --text-m: 1.0625rem;
+  --text-l: 1.25rem;
+  --text-xl: 1.5rem;
+  --text-2xl: clamp(1.75rem, 5vw, 2.5rem);
+  --text-3xl: clamp(2.25rem, 8vw, 4rem);
+  --text-display: clamp(2.75rem, 13vw, 7.5rem);
+
+  /* The measure: prose is unreadable when it runs the width of a laptop. */
+  --measure: 34rem;
+  --measure-wide: 62rem;
+
+  /* Motion */
+  --motion-reveal: 620ms;
+  --motion-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-draw: 1400ms;
 }

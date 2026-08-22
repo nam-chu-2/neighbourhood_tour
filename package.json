@@ -3,13 +3,13 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Bells Corners Radio \u2014 a static, offline-first radio dial tour",
+  "description": "Bells Corners \u2014 a static, offline-first editorial expedition page",
   "engines": {
     "node": ">=22"
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "build": "tsc --noEmit && vite build && vite build --ssr src/entry-server.tsx --outDir dist-ssr && tsx scripts/prerender.ts",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -18,7 +18,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "qr": "tsx scripts/qr.ts",
-    "noise": "tsx scripts/make-noise.ts"
+    "images": "tsx scripts/make-images.ts"
   },
   "dependencies": {
     "react": "^19.2.0",
